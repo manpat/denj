@@ -7,7 +7,11 @@ Feedback and suggestions welcome.
 Dependencies
 ------------
 
-[DerelictOrg](https://github.com/DerelictOrg)
-	So far only DerelictSDL2, DerelictGL3 and DerelictUtil
+[DerelictUtil](https://github.com/DerelictOrg/DerelictUtil)
+
+[DerelictSDL2](https://github.com/DerelictOrg/DerelictSDL2)
+
+[DerelictGL3](https://github.com/DerelictOrg/DerelictGL3)
+
 
 Note: only the search directories need to be provided to build. libs specified in source.
