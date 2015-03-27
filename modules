@@ -1,0 +1,39 @@
+Modules
+=======
+
+System
+	Windowing
+	Event stuff
+	Resource management
+
+Utility
+	Logging
+	Helpers
+	Timing
+	Debug Graphics
+
+Math
+	Vector
+	Matrix
+	Quaternion
+	Frustum
+	Interpolation
+
+Graphics
+	Renderer
+	Vertex Buffers
+	Shaders
+	Textures
+	Camera
+	Framebuffers
+	[Other buffers]
+
+Audio
+
+GUI
+
+Physics 
+
+Networking
+
+Scripting
