@@ -14,7 +14,7 @@ import denj.utility.log;
 
 private {
 	__gshared Window[uint] windows;
-	bool hasInited = false;
+	__gshared bool hasInited = false;
 }
 
 class Window {
@@ -133,8 +133,6 @@ class Window {
 			return;
 		}
 
-		SDL_GL_SwapWindow(sdlWindow);
-
 		if(isMaster){
 			SDL_Event e;
 			bool windowSpecific = false;
@@ -199,6 +197,16 @@ class Window {
 
 	void Close(){
 		isOpen = false;
+	}
+
+	void MakeCurrent(){
+		if(sdlWindow)
+			SDL_GL_MakeCurrent(sdlWindow, sdlGLContext);
+	}
+
+	void Swap(){
+		if(sdlWindow)
+			SDL_GL_SwapWindow(sdlWindow);
 	}
 
 	bool IsOpen(){

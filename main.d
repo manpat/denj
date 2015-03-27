@@ -1,6 +1,7 @@
 module main;
 
 import derelict.sdl2.sdl;
+import derelict.opengl3.gl3;
 import denj.utility.log;
 import denj.math.vector;
 import denj.system.window;
@@ -51,10 +52,22 @@ void main(){
 	});
 
 	while(window.IsOpen()){
+		window.MakeCurrent();
+		glClearColor(1f, 0f, 0f, 1f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		window.Swap();
+
+		window2.MakeCurrent();
+		glClearColor(0f, 1f, 0f, 1f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		window2.Swap();
+
+		window3.MakeCurrent();
+		glClearColor(0f, 0f, 1f, 1f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		window3.Swap();
+
 		Window.UpdateAll();
-		//window.Update();
-		//window2.Update();
-		//window3.Update();
 		SDL_Delay(10);
 	}
 }
