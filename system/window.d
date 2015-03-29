@@ -95,6 +95,7 @@ class Window {
 
 			SDL_Quit();
 			windows[0] = null;
+			hasInited = false;
 		}
 	}
 
@@ -102,6 +103,12 @@ class Window {
 		auto main = 0 in windows;
 
 		return main?*main:null;
+	}
+
+	static Window GetWindow(uint id){
+		auto win = id in windows;
+
+		return win?*win:null;
 	}
 
 	static void UpdateAll(){
@@ -113,6 +120,20 @@ class Window {
 				w.Update();
 			}
 		}
+	}
+
+	static void HookAllSDL(uint evtType, void delegate(SDL_Event*) hook){
+		foreach(i, w; windows){
+			if(i != 0){
+				w.HookSDL(evtType, hook);
+			}
+		}
+	}
+
+	static bool IsValid(){
+		auto main = 0 in windows;
+
+		return main?main.isOpen:false;
 	}
 
 	void HookSDL(uint evtType, void delegate(SDL_Event*) hook){
@@ -164,7 +185,8 @@ class Window {
 					if(w){
 						w.ProcessEvent(&e);
 					}else{
-						Log("Window not found ", window);
+						//Log("Window not found ", window);
+						// window was probably closed 
 					}
 				}else{
 					// Dispatch to all
@@ -207,6 +229,14 @@ class Window {
 	void Swap(){
 		if(sdlWindow)
 			SDL_GL_SwapWindow(sdlWindow);
+	}
+
+	void MakeMain(){
+		auto main = 0 in windows;
+		if(main) main.isMaster = false;
+
+		windows[0] = this;
+		isMaster = true;
 	}
 
 	bool IsOpen(){

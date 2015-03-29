@@ -2,11 +2,14 @@ module main;
 
 import derelict.sdl2.sdl;
 import derelict.opengl3.gl3;
+import denj.utility.general;
 import denj.utility.log;
 import denj.math.vector;
 import denj.system.window;
 
 import std.string;
+
+version = WindowTest;
 
 struct Thing {
 	int a = 123;
@@ -16,33 +19,37 @@ struct Thing {
 }
 
 void main(){
-	ClearLog();
-	Log("Denj test", " lelel ", 123);
-	Log("Denj test", " lelel ", Thing());
-	LogF("Format format %s format %s", Thing(555, 666.0, "abc"), "blah");
+	try{
+		ClearLog();
+		Log("Denj test", " lelel ", 123);
+		Log("Denj test", " lelel ", Thing());
+		LogF("Format format %s format %s", Thing(555, 666.0, "abc"), "blah");
 
-	Log("Creating window");
+		version(WindowTest) RunWindowTest();
+		
+	}catch(Exception e){
+		LogF("%s:%s: error: %s", e.file, e.line, e.msg);
+	}
+
+	Log("Finished");
+	FlushLog();
+}
+
+void RunWindowTest(){
+	Log("Running window test");
 
 	auto window = new Window(800, 600, "Thing");
 	auto window2 = new Window(200, 200, "Thing2");
 	auto window3 = new Window(200, 200, "Thing3");
 	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
 
-	window.HookSDL(SDL_KEYDOWN, (SDL_Event* e){
-		Log("window1 ", e.key.keysym.sym, " is escape? ", e.key.keysym.sym == SDLK_ESCAPE);
+	Window.HookAllSDL(SDL_KEYDOWN, (SDL_Event* e){
+		Log("window ", e.key.keysym.sym, " is escape? ", e.key.keysym.sym == SDLK_ESCAPE);
 		if(e.key.keysym.sym == SDLK_ESCAPE)
-			window.Close();
-	});
-	window2.HookSDL(SDL_KEYDOWN, (SDL_Event* e){
-		Log("window2 ", e.key.keysym.sym, " is escape? ", e.key.keysym.sym == SDLK_ESCAPE);
-		if(e.key.keysym.sym == SDLK_ESCAPE)
-			window2.Close();
-	});
+			Window.GetMain().Close();
 
-	window3.HookSDL(SDL_KEYDOWN, (SDL_Event* e){
-		Log("window3 ", e.key.keysym.sym, " is escape? ", e.key.keysym.sym == SDLK_ESCAPE);
-		if(e.key.keysym.sym == SDLK_ESCAPE)
-			window3.Close();
+		if(e.key.keysym.sym == SDLK_q)
+			Window.GetWindow(e.key.windowID).Close();
 	});
 
 	window2.HookSDL(SDL_DROPFILE, (SDL_Event* e){
@@ -51,7 +58,10 @@ void main(){
 		FlushLog();
 	});
 
-	while(window.IsOpen()){
+	window2.MakeMain();
+	window.Close();
+
+	while(Window.IsValid()){
 		window.MakeCurrent();
 		glClearColor(1f, 0f, 0f, 1f);
 		glClear(GL_COLOR_BUFFER_BIT);

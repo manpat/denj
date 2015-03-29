@@ -5,11 +5,12 @@ System
 	Windowing
 	Event stuff
 	Resource management
+	Timing
 
 Utility
 	Logging
 	Helpers
-	Timing
+	Serialise
 	Debug Graphics
 
 Math
