@@ -1,3 +1,6 @@
 Add config to Window class
 	GL version
 	Borderless
+	Dropfile enabled
+
+Find way to seperate gl from window class

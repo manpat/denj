@@ -2,42 +2,63 @@ module main;
 
 import derelict.sdl2.sdl;
 import derelict.opengl3.gl3;
-import denj.utility.general;
-import denj.utility.log;
-import denj.math.vector;
 import denj.system.window;
+import denj.system.input;
+import denj.utility;
+import denj.math;
 
 import std.string;
 
-version = WindowTest;
-
-struct Thing {
-	int a = 123;
-	float b = 456.7;
-	string c = "89 10";
-	vec2 d = vec2(0.707, 1.52);
-}
+version = TestLog;
+//version = TestMath;
+//version = TestWindow;
+version = TestInput;
 
 void main(){
-	try{
-		ClearLog();
-		Log("Denj test", " lelel ", 123);
-		Log("Denj test", " lelel ", Thing());
-		LogF("Format format %s format %s", Thing(555, 666.0, "abc"), "blah");
+	ClearLog();
 
-		version(WindowTest) RunWindowTest();
-		
-	}catch(Exception e){
-		LogF("%s:%s: error: %s", e.file, e.line, e.msg);
-	}
+	version(TestLog) RunTest!LogTests();
+	version(TestMath) RunTest!MathTests();
+	version(TestWindow) RunTest!WindowTests();
+	version(TestInput) RunTest!InputTests();
 
 	Log("Finished");
 	FlushLog();
 }
 
-void RunWindowTest(){
-	Log("Running window test");
+void RunTest(alias test)(){
+	Log("Running " ~ test.stringof);
+	try{
+		test();
+	}catch(Exception e){
+		LogF("%s:%s: error: in "~test.stringof~": %s", e.file, e.line, e.msg);
+	}
+	Log(test.stringof ~ " done");
+	Log();
+}
 
+void LogTests(){
+	struct Thing {
+		int a = 123;
+		float b = 456.7;
+		string c = "89 10";
+		vec2 d = vec2(0.707, 1.52);
+	}
+
+	Log("Denj test", " lelel ", 123);
+	Log("Denj test", " lelel ", Thing());
+	LogF("Format format %s format %s", Thing(555, 666.0, "abc"), "blah");
+}
+
+void MathTests(){
+	auto a = vec4(1, 0, 1, 0);
+	auto b = vec4(1, 1, 0.4, 0);
+
+	LogF("%s + %s = %s", a, b, a + b);
+	Log("TODO: write more math");
+}
+
+void WindowTests(){
 	auto window = new Window(800, 600, "Thing");
 	auto window2 = new Window(200, 200, "Thing2");
 	auto window3 = new Window(200, 200, "Thing3");
@@ -79,5 +100,30 @@ void RunWindowTest(){
 
 		Window.UpdateAll();
 		SDL_Delay(10);
+	}
+}
+
+void InputTests(){
+	auto window = new Window(200, 200, "InputTest");
+	auto input = new Input(window);
+
+	while(Window.IsValid()){
+		window.Update();
+		if(input.KeyPressed(SDLK_ESCAPE)) window.Close();
+
+		if(input.KeyPressed(SDLK_a)){
+			glClearColor(1,1,0,1);
+		}else if(input.KeyReleased(SDLK_a)){
+			glClearColor(0,1,1,1);
+		}else if(input.KeyDown(SDLK_s)){
+			glClearColor(1,0,1,1);
+		}else{
+			glClearColor(1,1,1,1);
+		}
+
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		window.Swap();
+		SDL_Delay(50);
 	}
 }

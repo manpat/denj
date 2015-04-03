@@ -30,6 +30,8 @@ class Window {
 		bool isOpen = false;
 
 		void delegate(SDL_Event*) [uint] eventHooks;
+		void delegate() [] frameBeginHooks;
+		void delegate() [] updateHooks;
 	}
 
 	this(int _width, int _height, string title){
@@ -140,6 +142,14 @@ class Window {
 		eventHooks[evtType] = hook;
 	}
 
+	void HookUpdate(void delegate() hook){
+		updateHooks ~= hook;
+	}
+
+	void HookFrameBegin(void delegate() hook){
+		frameBeginHooks ~= hook;
+	}
+
 	void Update(){
 		if(!sdlWindow) return;
 
@@ -154,6 +164,10 @@ class Window {
 			return;
 		}
 
+		foreach(h; frameBeginHooks){
+			h();
+		}
+
 		if(isMaster){
 			SDL_Event e;
 			bool windowSpecific = false;
@@ -164,6 +178,8 @@ class Window {
 						Close();
 						return;
 				
+					// Because some events don't
+					//	have a windowID
 					case SDL_KEYDOWN:
 					case SDL_KEYUP:
 					case SDL_MOUSEMOTION:
@@ -195,6 +211,10 @@ class Window {
 					}
 				}
 			}
+		}
+
+		foreach(h; updateHooks){
+			h();
 		}
 	}
 

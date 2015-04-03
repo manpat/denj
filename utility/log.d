@@ -22,6 +22,10 @@ void ClearLog(){
 	std.file.write(logFile, "");
 }
 
+void Log()(){
+	writeln("");
+	if(fileLoggingEnabled) std.file.append(logFile, "\n");
+}
 void Log(T...) (T t){
 	writeln(t);
 	if(fileLoggingEnabled) std.file.append(logFile, TupleToString(t) ~ "\n");
