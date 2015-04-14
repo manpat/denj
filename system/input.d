@@ -24,6 +24,8 @@ class Input {
 		win.HookSDL(SDL_KEYDOWN, &HandleSDL);
 		win.HookSDL(SDL_KEYUP, &HandleSDL);
 		win.HookFrameBegin(&Update);
+
+		Log("Input initialised for window with id ", win.GetId());
 	}
 
 	private void HandleSDL(SDL_Event* e){

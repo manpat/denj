@@ -50,8 +50,8 @@ class Window {
 			windows[0] = this;
 		}
 
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
@@ -78,7 +78,7 @@ class Window {
 		if(!sdlGLContext) "GL context creation failed".Except;
 
 		if(!hasInited){
-			DerelictGL3.load();
+			DerelictGL3.reload();
 		}
 
 		hasInited = true;
@@ -124,6 +124,20 @@ class Window {
 		}
 	}
 
+	static void FrameBegin(){
+		auto main = GetMain();
+		foreach(h; main.frameBeginHooks){
+			h();
+		}
+
+		foreach(window; windows){
+			if(window.GetId() != main.GetId())
+				foreach(h; window.frameBeginHooks){
+					h();
+				}
+		}
+	}
+
 	static void HookAllSDL(uint evtType, void delegate(SDL_Event*) hook){
 		foreach(i, w; windows){
 			if(i != 0){
@@ -164,11 +178,8 @@ class Window {
 			return;
 		}
 
-		foreach(h; frameBeginHooks){
-			h();
-		}
-
 		if(isMaster){
+
 			SDL_Event e;
 			bool windowSpecific = false;
 			uint window = 0;
