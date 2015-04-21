@@ -17,8 +17,14 @@ private {
 	__gshared bool hasInited = false;
 }
 
+struct GLContextSettings{
+	uint major;
+	uint minor;
+}
+
 class Window {
 	enum AllEvents = SDL_LASTEVENT + 1;
+	enum DefaultContextSettings = GLContextSettings(3, 2);
 
 	private {
 		SDL_Window* sdlWindow;
@@ -34,7 +40,7 @@ class Window {
 		void delegate() [] updateHooks;
 	}
 
-	this(int _width, int _height, string title){
+	this(int _width, int _height, string title, GLContextSettings glsettings = DefaultContextSettings){
 		if(!hasInited){
 			DerelictSDL2.missingSymbolCallback = (string) => ShouldThrow.No;
 
@@ -50,8 +56,8 @@ class Window {
 			windows[0] = this;
 		}
 
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, glsettings.major);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, glsettings.minor);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 

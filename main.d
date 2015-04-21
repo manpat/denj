@@ -6,6 +6,7 @@ import denj.system.window;
 import denj.system.input;
 import denj.utility;
 import denj.math;
+import std.math;
 
 import std.string;
 
@@ -144,33 +145,23 @@ void Scratch(){
 
 	glFrontFace(GL_CW);
 
+	void RecalcBuffer(uint vbo, uint sides){
+		auto anginc = 2f*PI/cast(float)sides;
+		vec2[] buffer;
+
+		foreach(i; 0..sides){
+			auto f = cast(float) i;
+			buffer ~= vec2(cos(anginc*f), sin(anginc*f));
+		}
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		glBufferData(GL_ARRAY_BUFFER, buffer.length*2*float.sizeof, buffer.ptr, GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
 	uint vbo = 0;
 	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	auto data = [
-		vec2( 0f, 1f) * 0.998f,
-		vec2( 1f,-1f) * 0.998f,
-		vec2(-1f,-1f) * 0.998f,
-
-		vec2( 0f, 1f) * 0.9f,
-		vec2( 1f,-1f) * 0.9f,
-		vec2(-1f,-1f) * 0.9f,
-
-		vec2( 0f, 1f) * 0.8f,
-		vec2( 1f,-1f) * 0.8f,
-		vec2(-1f,-1f) * 0.8f,
-
-		vec2( 0f, 1f) * 0.7f,
-		vec2( 1f,-1f) * 0.7f,
-		vec2(-1f,-1f) * 0.7f,
-
-		vec2( 0f, 1f) * 0.6f,
-		vec2( 1f,-1f) * 0.6f,
-		vec2(-1f,-1f) * 0.6f,
-		vec2( 0f, 1f) * 0.6f,
-	];
-	glBufferData(GL_ARRAY_BUFFER, data.length*2*float.sizeof, data.ptr, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	RecalcBuffer(vbo, 3);
 
 	auto program = glCreateProgram();
 	{
@@ -180,7 +171,7 @@ void Scratch(){
 		in vec2 pos;
 		out float inst;
 		void main(){
-			gl_Position = vec4(pos/(gl_InstanceID*gl_InstanceID*0.5+1.0), 0, 1);
+			gl_Position = vec4(0.995*pos/(gl_InstanceID*0.8+1.0), 0, 1);
 			inst = gl_InstanceID*1.0;
 		}`.dup ~ '\0';
 
@@ -237,7 +228,7 @@ void Scratch(){
 		uint baseInstance = 0;
 	}
 
-	auto cmd = DrawArraysIndirectCommand(3, 8, 0, 0);
+	auto cmd = DrawArraysIndirectCommand(3, 32, 0, 0);
 
 	while(Window.IsValid()){
 		Window.FrameBegin();
@@ -253,17 +244,17 @@ void Scratch(){
 		glEnableVertexAttribArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, null);
-		glDrawArraysIndirect(GL_LINE_STRIP, &cmd);
+		glDrawArraysIndirect(GL_LINE_LOOP, &cmd);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glDisableVertexAttribArray(0);
 
 		if(input.KeyPressed(SDLK_a)){
-			if(cmd.first == 0) cmd.first += data.length-2;
-			cmd.first--;
+			if(cmd.count > 3) cmd.count--;
+			RecalcBuffer(vbo, cmd.count);
 
 		}else if(input.KeyPressed(SDLK_s) || input.KeyDown(SDLK_d)){
-			cmd.first++;
-			if(cmd.first > data.length-3) cmd.first = 0;
+			cmd.count++;
+			RecalcBuffer(vbo, cmd.count);
 		}
 
 		window.Swap();
