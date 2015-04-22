@@ -1,4 +1,4 @@
-#version 320
+#version 330
 #type vertex
 
 in vec4 vert;
@@ -18,5 +18,5 @@ in float blah;
 out vec4 output;
 
 void main(){
-	output = vec4(blah)
+	output = vec4(blah);
 }

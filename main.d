@@ -135,9 +135,11 @@ void InputTests(){
 }
 
 void GraphicsTests(){
-	import std.file;
+	auto win = new Window(100, 100, "Shader");
 
-	auto sh = ShaderProgram.LoadFromMemory(read("shader.shader"));
+	import std.file;
+	// auto sh = ShaderProgram.LoadFromMemory(read("shader.shader"));
+	auto sh = ShaderProgram.LoadFromFile("shader.shader");
 }
 
 void Scratch(){
