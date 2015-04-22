@@ -1,0 +1,35 @@
+Graphics
+========
+
+Shader
+------
+	Shader parsing
+		Multiple shader units per shader file
+		#type
+		#include
+
+	Set shader version
+	Load shader from file
+	Load shader from string
+	Attribute setting
+	Uniform setting
+
+Buffer
+------
+	Should handle multiple buffer types
+	Fencing
+
+Renderer
+--------
+	Should have render queues
+		Transparency, etc.
+		sort flag
+
+	Shader passes
+		Pass queue
+
+	Stencil stuff
+
+	Buffer binding
+
+	Draw calls

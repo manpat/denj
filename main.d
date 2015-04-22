@@ -4,17 +4,19 @@ import derelict.sdl2.sdl;
 import derelict.opengl3.gl3;
 import denj.system.window;
 import denj.system.input;
+import denj.graphics;
 import denj.utility;
 import denj.math;
 import std.math;
 
 import std.string;
 
-version = TestLog;
-//version = TestMath;
-//version = TestWindow;
-//version = TestInput;
-version = RunScratch;
+// version = TestLog;
+// version = TestMath;
+// version = TestWindow;
+// version = TestInput;
+version = TestGraphics;
+// version = RunScratch;
 
 void main(){
 	ClearLog();
@@ -23,6 +25,7 @@ void main(){
 	version(TestMath) RunTest!MathTests();
 	version(TestWindow) RunTest!WindowTests();
 	version(TestInput) RunTest!InputTests();
+	version(TestGraphics) RunTest!GraphicsTests();
 	version(RunScratch) RunTest!Scratch();
 
 	Log("Finished");
@@ -131,148 +134,12 @@ void InputTests(){
 	}
 }
 
+void GraphicsTests(){
+	import std.file;
+
+	auto sh = ShaderProgram.LoadFromMemory(read("shader.shader"));
+}
+
 void Scratch(){
-	auto window = new Window(800, 600, "Thing");
-	auto window2 = new Window(200, 200, "Thing2");
-	auto input = new Input(window);
-	auto input2 = new Input(window2);
-
-	window.MakeCurrent();
-
-	uint vao;
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-
-	glFrontFace(GL_CW);
-
-	void RecalcBuffer(uint vbo, uint sides){
-		auto anginc = 2f*PI/cast(float)sides;
-		vec2[] buffer;
-
-		foreach(i; 0..sides){
-			auto f = cast(float) i;
-			buffer ~= vec2(cos(anginc*f), sin(anginc*f));
-		}
-
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, buffer.length*2*float.sizeof, buffer.ptr, GL_STATIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-	}
-
-	uint vbo = 0;
-	glGenBuffers(1, &vbo);
-	RecalcBuffer(vbo, 3);
-
-	auto program = glCreateProgram();
-	{
-		auto vsrc = 
-		`#version 330
-
-		in vec2 pos;
-		out float inst;
-		void main(){
-			gl_Position = vec4(0.995*pos/(gl_InstanceID*0.8+1.0), 0, 1);
-			inst = gl_InstanceID*1.0;
-		}`.dup ~ '\0';
-
-		auto fsrc = 
-		`#version 330
-
-		in float inst;
-		out vec4 color;
-		void main(){
-			color = vec4(1/(inst*0.5), 0.2, inst/10.0 + 0.2, 1);
-		}`.dup ~ '\0';
-		
-		auto vsh = glCreateShader(GL_VERTEX_SHADER);
-		auto vsrcp = vsrc.ptr;
-		glShaderSource(vsh, 1, &vsrcp, null);
-		glCompileShader(vsh);
-		GLint status;
-		glGetShaderiv(vsh, GL_COMPILE_STATUS, &status);
-		if(status == GL_FALSE){
-			char[] buffer = new char[512];
-			glGetShaderInfoLog(vsh, 512, null, buffer.ptr);
-
-			Log(buffer);
-			throw new Exception("Shader compile fail");
-		}
-
-		auto fsh = glCreateShader(GL_FRAGMENT_SHADER);
-		auto fsrcp = fsrc.ptr;
-		glShaderSource(fsh, 1, &fsrcp, null);
-		glCompileShader(fsh);
-		glGetShaderiv(fsh, GL_COMPILE_STATUS, &status);
-		if(status == GL_FALSE){
-			char[] buffer = new char[512];
-			glGetShaderInfoLog(fsh, 512, null, buffer.ptr);
-
-			Log(buffer);
-			throw new Exception("Shader compile fail");
-		}
-
-		glAttachShader(program, vsh);
-		glAttachShader(program, fsh);
-		glBindFragDataLocation(program, 0, "color");
-		glLinkProgram(program);
-		glDeleteShader(vsh);
-		glDeleteShader(fsh);
-
-		glUseProgram(program);
-	}
-
-	struct DrawArraysIndirectCommand {
-		uint count;
-		uint instances;
-		uint first = 0;
-		uint baseInstance = 0;
-	}
-
-	auto cmd = DrawArraysIndirectCommand(3, 32, 0, 0);
-
-	while(Window.IsValid()){
-		Window.FrameBegin();
-		Window.UpdateAll();
-		if(input2.KeyDown(SDLK_ESCAPE)) window.Close();
-
-		window.MakeCurrent();
-		glUseProgram(program);
-		enum grey = 0.1f;
-		glClearColor(grey, grey, grey, 1f);
-		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, null);
-		glDrawArraysIndirect(GL_LINE_LOOP, &cmd);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glDisableVertexAttribArray(0);
-
-		if(input.KeyPressed(SDLK_a)){
-			if(cmd.count > 3) cmd.count--;
-			RecalcBuffer(vbo, cmd.count);
-
-		}else if(input.KeyPressed(SDLK_s) || input.KeyDown(SDLK_d)){
-			cmd.count++;
-			RecalcBuffer(vbo, cmd.count);
-		}
-
-		window.Swap();
-
-		window2.MakeCurrent();
-		if(input2.KeyPressed(SDLK_a)){
-			glClearColor(1,1,0,1);
-		}else if(input2.KeyReleased(SDLK_a)){
-			glClearColor(0,1,1,1);
-		}else if(input2.KeyDown(SDLK_s)){
-			glClearColor(1,0,1,1);
-		}else{
-			glClearColor(1,1,1,1);
-		}
-
-		glClear(GL_COLOR_BUFFER_BIT);
-		window2.Swap();
-
-		SDL_Delay(20);
-	}
+	
 }

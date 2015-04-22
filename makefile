@@ -4,7 +4,8 @@ all: $(SOURCE)
 	dmd $^ -ofbuild
 
 run: all
-	@optirun ./build
+	# @optirun ./build
+	./build
 
 clean:
 	@rm ./build
