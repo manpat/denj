@@ -135,11 +135,57 @@ void InputTests(){
 }
 
 void GraphicsTests(){
-	auto win = new Window(100, 100, "Shader");
+	auto win = new Window(512, 512, "Shader");
+	auto inp = new Input(win);
+	uint vao;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
 
-	import std.file;
-	// auto sh = ShaderProgram.LoadFromMemory(read("shader.shader"));
 	auto sh = ShaderProgram.LoadFromFile("shader.shader");
+	glUseProgram(sh.glprogram);
+
+	glFrontFace(GL_CW);
+
+	uint vbo = 0;
+	auto data = [
+		vec2(-1,-1),
+		vec2(-1, 1),
+		vec2( 1, 1),
+
+		vec2(-1,-1),
+		vec2( 1,-1),
+		vec2( 1, 1),
+	];
+
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, data.length*vec2.sizeof, data.ptr, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glEnableVertexAttribArray(0);
+
+	float t = 0f;
+	while(win.IsOpen()){
+		t += 0.04f;
+
+		if(inp.KeyPressed(SDLK_ESCAPE)) win.Close();
+
+		win.FrameBegin();
+		win.Update();
+
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, null);
+		glVertexAttrib3f(1, 0f, 1f, 1f);
+		glUniform1f(glGetUniformLocation(sh.glprogram, "frequency"), sin(t)*9f+10f);
+
+		glDrawArrays(GL_TRIANGLES, 0, cast(int) data.length);
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		win.Swap();
+	}
 }
 
 void Scratch(){

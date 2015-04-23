@@ -7,13 +7,11 @@ import std.conv;
 import std.regex;
 
 class ShaderProgram {
-	private {
+	public {
 		uint glprogram = 0;
 	}
 
 	this()(auto ref ShaderInfo info){
-		Log("ShaderProgram.this");
-
 		glprogram = glCreateProgram();
 		uint[] shaderUnits;
 
@@ -28,13 +26,24 @@ class ShaderProgram {
 		foreach(u; shaderUnits){
 			glDeleteShader(u);
 		}
+
+		GLint status;
+		glGetProgramiv(glprogram, GL_LINK_STATUS, &status);
+		if(status == GL_FALSE){
+			int logLength = 0;
+			glGetProgramiv(glprogram, GL_INFO_LOG_LENGTH, &logLength);
+
+			char[] buffer = new char[logLength];
+			glGetProgramInfoLog(glprogram, logLength, null, buffer.ptr);
+
+			Log(buffer);
+			throw new Exception("Program link fail");
+		}
 	}
 
 	uint CompileUnit()(ShaderInfo info, auto ref ShaderUnit unit){
-		Log("CompileUnit");
 		char[] src = "#version "~info.shaderVersion~'\n' ~ unit.src ~ '\0';
 		auto srcp = src.ptr;
-		// Log(src);
 
 		uint glunit = glCreateShader(unit.stage);
 		glShaderSource(glunit, 1, &srcp, null);
@@ -88,8 +97,11 @@ private struct ShaderUnit{
 	enum Stage {
 		Unknown,
 		Vertex = GL_VERTEX_SHADER,
+		TessControl = GL_TESS_CONTROL_SHADER,
+		TessEval = GL_TESS_EVALUATION_SHADER,
 		Geometry = GL_GEOMETRY_SHADER,
 		Fragment = GL_FRAGMENT_SHADER,
+		Compute = GL_COMPUTE_SHADER,
 	}
 
 	Stage stage;
@@ -99,8 +111,11 @@ private struct ShaderUnit{
 	void SetStage(char[] ss){
 		switch(ss){
 			case "vertex": stage = Stage.Vertex; break;
+			case "tesscontrol": stage = Stage.TessControl; break;
+			case "tesseval": stage = Stage.TessEval; break;
 			case "geometry": stage = Stage.Geometry; break;
 			case "fragment": stage = Stage.Fragment; break;
+			case "compute": stage = Stage.Compute; break;
 
 			default: Log("Unknown shader stage '", ss, "'"); stage = Stage.Unknown; break;
 		}
@@ -141,7 +156,10 @@ private ShaderInfo ParseShaderFile(char[] src){
 	uint lineno = 0;
 	foreach(line; splitter(src, '\n')){
 		lineno++;
-		if(matchFirst(line, whitespaceRegex)) continue;
+		if(matchFirst(line, whitespaceRegex)) {
+			unit.src ~= '\n';
+			continue;
+		}
 
 		auto preprocessMatch = matchFirst(line, preprocessRegex);
 		if(preprocessMatch){
@@ -155,7 +173,7 @@ private ShaderInfo ParseShaderFile(char[] src){
 						ret.units ~= *unit;
 					}
 					unit = new ShaderUnit();
-					unit.lineoffset = lineno;
+					unit.lineoffset = lineno -1;
 					unit.SetStage(preprocessMatch["arg"]);
 					break;
 
