@@ -178,7 +178,7 @@ void GraphicsTests(){
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, null);
 		glVertexAttrib3f(1, 0f, 1f, 1f);
-		glUniform1f(glGetUniformLocation(sh.glprogram, "frequency"), sin(t)*9f+10f);
+		sh.SetUniform("frequency", sin(t)*9f+10f);
 
 		glDrawArrays(GL_TRIANGLES, 0, cast(int) data.length);
 

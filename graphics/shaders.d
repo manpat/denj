@@ -2,13 +2,16 @@ module denj.graphics.shaders;
 
 import denj.graphics.common;
 import denj.utility;
+import denj.math;
 import std.string;
-import std.conv;
+import std.traits;
 import std.regex;
+import std.conv;
 
 class ShaderProgram {
 	public {
 		uint glprogram = 0;
+		int[string] uniformLocations;
 	}
 
 	this()(auto ref ShaderInfo info){
@@ -36,8 +39,14 @@ class ShaderProgram {
 			char[] buffer = new char[logLength];
 			glGetProgramInfoLog(glprogram, logLength, null, buffer.ptr);
 
-			Log(buffer);
+			Log(info.filename, ": ", buffer);
 			throw new Exception("Program link fail");
+		}
+
+		foreach(u; info.data){
+			if(u.type == ShaderData.Type.Uniform){
+				uniformLocations[u.name.idup] = glGetUniformLocation(glprogram, u.name.toStringz);
+			}
 		}
 	}
 
@@ -91,7 +100,27 @@ class ShaderProgram {
 
 		return new ShaderProgram(shaderInfo);
 	}
+
+	void SetUniform(T)(string s, T val){
+		enum mangle = GetGLMangle!T;
+		// uint pos = glGetUniformLocation(glprogram, (s~"\0").ptr);
+		int pos = uniformLocations.get(s, -1);
+		if(pos < 0) Log("Tried to set non existent uniform '", s, "'");
+
+		static if(isVec!T){
+			mixin("glUniform"~mangle~"v(pos, 1, val.data.ptr);");
+		}else{
+			mixin("glUniform"~mangle~"(pos, val);");
+		}
+	}
 }
+
+/////////////////////////////////////////////////////////
+//                                                     //
+//  For internal use                                   //
+//                                                     //
+/////////////////////////////////////////////////////////
+
 
 private struct ShaderUnit{
 	enum Stage {
@@ -142,7 +171,7 @@ private struct ShaderInfo{
 }
 
 private ShaderInfo ParseShaderFile(char[] src){
-	import std.algorithm;
+	import std.algorithm : splitter;
 
 	enum whitespaceRegex = ctRegex!`^\s*$`;
 	enum preprocessRegex = ctRegex!`#(?P<type>\w+)\s+(?P<arg>\w+)`;

@@ -1,14 +1,20 @@
 module denj.math.vector;
 
-import std.math;
+public import std.math;
 import std.string : format;
+
+template isVec(T){
+	enum isVec = is(T == Vector!(D, sT), int D, sT);
+}
 
 struct Vector(int Dim, T = float){
 	alias Vector!(Dim, T) thisType;
+	enum Dimensions = Dim;
+	alias BaseType = T;
+
+	T[Dim] data;
 
 	private{
-		T[Dim] data;
-
 		@property ref T get(int i)(){
 			return data[i];
 		}
