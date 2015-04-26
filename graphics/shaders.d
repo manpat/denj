@@ -43,6 +43,22 @@ class ShaderProgram {
 			throw new Exception("Program link fail");
 		}
 
+		// Perhaps make this optional
+		glValidateProgram(glprogram);
+
+		status = 0;
+		glGetProgramiv(glprogram, GL_VALIDATE_STATUS, &status);
+		if(status == GL_FALSE){
+			int logLength = 0;
+			glGetProgramiv(glprogram, GL_INFO_LOG_LENGTH, &logLength);
+
+			char[] buffer = new char[logLength];
+			glGetProgramInfoLog(glprogram, logLength, null, buffer.ptr);
+
+			Log(info.filename, ": ", buffer);
+			throw new Exception("Program validation fail");
+		}
+
 		foreach(u; info.data){
 			if(u.type == ShaderData.Type.Uniform){
 				uniformLocations[u.name.idup] = glGetUniformLocation(glprogram, u.name.toStringz);
@@ -103,10 +119,14 @@ class ShaderProgram {
 	}
 
 	void SetUniform(T)(string s, T val){
-		enum mangle = GetGLMangle!T;
-
 		int pos = uniformLocations.get(s, -1);
 		if(pos < 0) Log("Tried to set non existent uniform '", s, "'");
+
+		SetUniform(pos, val);
+	}
+
+	void SetUniform(T)(int pos, T val){
+		enum mangle = GetGLMangle!T;
 
 		static if(isVec!T){
 			mixin("glUniform"~mangle~"v(pos, 1, val.data.ptr);");
@@ -114,7 +134,11 @@ class ShaderProgram {
 			mixin("glUniformMatrix"~mangle~"v(pos, 1, GL_TRUE, val.data.ptr);");
 		}else{
 			mixin("glUniform"~mangle~"(pos, val);");
-		}
+		}		
+	}
+
+	void EnableAttributeArray(int pos){
+		glEnableVertexAttribArray(pos);
 	}
 }
 

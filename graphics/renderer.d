@@ -15,6 +15,9 @@ private {
 struct GLContextSettings{
 	uint major;
 	uint minor;
+	// compatibility
+	bool debugContext = false;
+	bool doubleBuffer = true;
 }
 
 class Renderer {
@@ -22,6 +25,8 @@ class Renderer {
 
 	private {
 		SDL_GLContext sdlGLContext;
+		uint glstate;
+
 		Window window;
 	}
 
@@ -31,8 +36,10 @@ class Renderer {
 
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, glsettings.major);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, glsettings.minor);
-		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, glsettings.doubleBuffer?1:0);
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 
+			glsettings.debugContext?SDL_GL_CONTEXT_DEBUG_FLAG:0);
 
 		scope(failure) SDL_GL_DeleteContext(sdlGLContext);
 		sdlGLContext = SDL_GL_CreateContext(window.GetSDLWindow());
@@ -41,9 +48,12 @@ class Renderer {
 
 		if(!hasInited){
 			DerelictGL3.load();
-			DerelictGL3.reload();
+			DerelictGL3.reload(); // required to get access to gl4 functions
 			hasInited = true;
 		}
+
+		glGenVertexArrays(1, &glstate);
+		glBindVertexArray(glstate);
 
 		MakeCurrent();
 	}
@@ -56,7 +66,18 @@ class Renderer {
 		SDL_GL_MakeCurrent(window.GetSDLWindow(), sdlGLContext);
 	}
 
-	void Draw(){
+	void Swap(){
 		SDL_GL_SwapWindow(window.GetSDLWindow());
+	}
+
+	// Binds values/buffers to attributes
+	// Handles the enabling/disabling of vertex attrib arrays
+	void SetAttribute(T)(int attr, T valorbuf){
+
+	}
+
+	// Calls glDraw(Arrays|Elements)[Instanced] based on bound buffers
+	void Draw(){
+
 	}
 }

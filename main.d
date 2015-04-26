@@ -130,7 +130,7 @@ void InputTests(){
 
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		renderer.Draw();
+		renderer.Swap();
 		SDL_Delay(50);
 	}
 }
@@ -250,11 +250,7 @@ void InitGLDebugging(){
 void GraphicsTests(){
 	auto win = new Window(800, 600, "Shader");
 	auto inp = new Input(win);
-	auto rend = new Renderer(win);
-
-	uint vao;
-	cgl!glGenVertexArrays(1, &vao);
-	cgl!glBindVertexArray(vao);
+	auto rend = new Renderer(win, GLContextSettings(3, 2, true));
 	InitGLDebugging();
 
 	auto sh = ShaderProgram.LoadFromFile("shader.shader");
@@ -267,8 +263,8 @@ void GraphicsTests(){
 
 	cgl!glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	uint vbo = 0;
-	uint ebo = 0;
+	// uint vbo = 0;
+	// uint ebo = 0;
 	auto data = [
 		vec3(-1, 1,-1),
 		vec3( 1,-1,-1),
@@ -282,15 +278,12 @@ void GraphicsTests(){
 		1,3,2,
 	];
 
-	cgl!glGenBuffers(2, *[&vbo, &ebo].ptr);
-	cgl!glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	cgl!glBufferData(GL_ARRAY_BUFFER, data.length*vec3.sizeof, data.ptr, GL_STATIC_DRAW);
-	cgl!glBindBuffer(GL_ARRAY_BUFFER, 0);
-	cgl!glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	cgl!glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicies.length*vec3.sizeof, indicies.ptr, GL_STATIC_DRAW);
-	cgl!glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	auto vbo = new Buffer!vec3();
+	auto ebo = new Buffer!ubyte(BufferType.Index);
+	vbo.Upload(data);
+	ebo.Upload(indicies);
 
-	cgl!glEnableVertexAttribArray(0);
+	sh.EnableAttributeArray(0); // Should be handled by renderer
 
 	mat4 projection;
 	{
@@ -348,15 +341,15 @@ void GraphicsTests(){
 
 		cgl!glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
-		cgl!glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		cgl!glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+		vbo.Bind();
+		ebo.Bind();
 
 		auto c = t*0.4;
 
 		// Outer loop
 		cgl!glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, null);
 		cgl!glVertexAttrib2f(1, c, 1f);
-		cgl!glDrawElements(GL_LINE_LOOP, cast(int) indicies.length, GL_UNSIGNED_BYTE, null);
+		cgl!glDrawElements(GL_LINE_LOOP, cast(int) ebo.length, GL_UNSIGNED_BYTE, null);
 
 		// Inner loop
 		auto scale = (mat4.identity*(0.93f));
@@ -364,7 +357,7 @@ void GraphicsTests(){
 		sh.SetUniform("modelview", translation*rotation*scale);
 
 		cgl!glVertexAttrib2f(1, c*0.3f, 0.5f);
-		cgl!glDrawElements(GL_LINE_LOOP, cast(int) indicies.length, GL_UNSIGNED_BYTE, null);
+		cgl!glDrawElements(GL_LINE_LOOP, cast(int) ebo.length, GL_UNSIGNED_BYTE, null);
 
 		// Inverted tetra
 		scale = (mat4.identity*-(0.4f + sin(t)*0.1f));
@@ -372,20 +365,20 @@ void GraphicsTests(){
 		sh.SetUniform("modelview", translation*rotation*scale);
 
 		cgl!glVertexAttrib2f(1, c*5f, 1f);
-		cgl!glDrawElements(GL_LINE_LOOP, cast(int) indicies.length, GL_UNSIGNED_BYTE, null);
+		cgl!glDrawElements(GL_LINE_LOOP, cast(int) ebo.length, GL_UNSIGNED_BYTE, null);
 
 		// Solid tetra
 		scale = (mat4.identity*-(0.2f + sin(t)*0.1f));
 		scale[3,3] = 1f;
 		sh.SetUniform("modelview", translation*rotation*scale);
 
-		cgl!glVertexAttrib2f(1, c*0.3f, 0.2f);
-		cgl!glDrawElements(GL_TRIANGLES, cast(int) indicies.length, GL_UNSIGNED_BYTE, null);
+		cgl!glVertexAttrib2f(1, c*2f, 0.2f);
+		cgl!glDrawElements(GL_TRIANGLES, cast(int) ebo.length, GL_UNSIGNED_BYTE, null);
 
-		cgl!glBindBuffer(GL_ARRAY_BUFFER, 0);
-		cgl!glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		vbo.Unbind();
+		ebo.Unbind();
 
-		rend.Draw();
+		rend.Swap();
 	}
 }
 

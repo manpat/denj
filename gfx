@@ -17,7 +17,8 @@ Shader
 Buffer
 ------
 	Should handle multiple buffer types
-	Fencing
+	Persistent mapping?
+		Fencing
 
 Renderer
 --------
@@ -31,5 +32,13 @@ Renderer
 	Stencil stuff
 
 	Buffer binding
+		Vertex Attributes
+		Element/Index Arrays
+		Divisor/Instancing
 
 	Draw calls
+
+	Queries
+		Primitives drawn
+		Samples
+		Render time
