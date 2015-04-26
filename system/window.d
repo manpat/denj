@@ -17,18 +17,11 @@ private {
 	__gshared bool hasInited = false;
 }
 
-struct GLContextSettings{
-	uint major;
-	uint minor;
-}
-
 class Window {
 	enum AllEvents = SDL_LASTEVENT + 1;
-	enum DefaultContextSettings = GLContextSettings(3, 2);
 
 	private {
 		SDL_Window* sdlWindow;
-		SDL_GLContext sdlGLContext;
 		int width, height;
 
 		uint id = 0;
@@ -40,11 +33,9 @@ class Window {
 		void delegate() [] updateHooks;
 	}
 
-	this(int _width, int _height, string title, GLContextSettings glsettings = DefaultContextSettings){
+	this(int _width, int _height, string title){
 		if(!hasInited){
 			DerelictSDL2.missingSymbolCallback = (string) => ShouldThrow.No;
-
-			DerelictGL3.load();
 			DerelictSDL2.load();
 
 			scope(failure) SDL_Quit();
@@ -55,11 +46,6 @@ class Window {
 			isMaster = true;
 			windows[0] = this;
 		}
-
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, glsettings.major);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, glsettings.minor);
-		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
 		width = _width;
 		height = _height;
@@ -78,15 +64,6 @@ class Window {
 			"Window creation failed".Except;
 		}
 
-		scope(failure) SDL_GL_DeleteContext(sdlGLContext);
-		sdlGLContext = SDL_GL_CreateContext(sdlWindow);
-
-		if(!sdlGLContext) "GL context creation failed".Except;
-
-		if(!hasInited){
-			DerelictGL3.reload();
-		}
-
 		hasInited = true;
 		isOpen = true;
 		id = SDL_GetWindowID(sdlWindow);
@@ -94,7 +71,6 @@ class Window {
 	}
 
 	~this(){
-		if(sdlGLContext) SDL_GL_DeleteContext(sdlGLContext);
 		if(sdlWindow) SDL_DestroyWindow(sdlWindow);
 		if(isMaster) {
 			foreach(w; windows){
@@ -175,17 +151,14 @@ class Window {
 
 		if(!isOpen){
 			windows.remove(id);
-			if(sdlGLContext) SDL_GL_DeleteContext(sdlGLContext);
 			if(sdlWindow) SDL_DestroyWindow(sdlWindow);
 
 			sdlWindow = null;
-			sdlGLContext = null;
 
 			return;
 		}
 
 		if(isMaster){
-
 			SDL_Event e;
 			bool windowSpecific = false;
 			uint window = 0;
@@ -258,16 +231,6 @@ class Window {
 		isOpen = false;
 	}
 
-	void MakeCurrent(){
-		if(sdlWindow)
-			SDL_GL_MakeCurrent(sdlWindow, sdlGLContext);
-	}
-
-	void Swap(){
-		if(sdlWindow)
-			SDL_GL_SwapWindow(sdlWindow);
-	}
-
 	void MakeMain(){
 		auto main = 0 in windows;
 		if(main) main.isMaster = false;
@@ -286,5 +249,9 @@ class Window {
 
 	uint GetId(){
 		return id;
+	}
+
+	SDL_Window* GetSDLWindow(){
+		return sdlWindow;
 	}
 }

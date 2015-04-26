@@ -7,9 +7,9 @@ import denj.system.input;
 import denj.graphics;
 import denj.utility;
 import denj.math;
-import std.math;
 
 import std.string;
+import std.random;
 
 // version = TestLog;
 // version = TestMath;
@@ -38,6 +38,7 @@ void RunTest(alias test)(){
 		test();
 	}catch(Exception e){
 		LogF("%s:%s: error: in "~test.stringof~": %s", e.file, e.line, e.msg);
+		throw e;
 	}
 	Log(test.stringof ~ " done");
 	Log();
@@ -68,6 +69,10 @@ void WindowTests(){
 	auto window = new Window(800, 600, "Thing");
 	auto window2 = new Window(200, 200, "Thing2");
 	auto window3 = new Window(200, 200, "Thing3");
+
+	auto renderer = new Renderer(window);
+	auto renderer3 = new Renderer(window3);
+
 	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
 
 	Window.HookAllSDL(SDL_KEYDOWN, (SDL_Event* e){
@@ -89,20 +94,15 @@ void WindowTests(){
 	window2.Close();
 
 	while(Window.IsValid()){
-		window.MakeCurrent();
+		renderer.MakeCurrent();
 		glClearColor(1f, 0f, 0f, 1f);
 		glClear(GL_COLOR_BUFFER_BIT);
-		window.Swap();
+		renderer.Draw();
 
-		window2.MakeCurrent();
-		glClearColor(0f, 1f, 0f, 1f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		window2.Swap();
-
-		window3.MakeCurrent();
+		renderer3.MakeCurrent();
 		glClearColor(0f, 0f, 1f, 1f);
 		glClear(GL_COLOR_BUFFER_BIT);
-		window3.Swap();
+		renderer3.Draw();
 
 		Window.UpdateAll();
 		SDL_Delay(50);
@@ -111,6 +111,7 @@ void WindowTests(){
 
 void InputTests(){
 	auto window = new Window(200, 200, "InputTest");
+	auto renderer = new Renderer(window);
 	auto input = new Input(window);
 
 	while(Window.IsValid()){
@@ -129,62 +130,262 @@ void InputTests(){
 
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		window.Swap();
+		renderer.Draw();
 		SDL_Delay(50);
 	}
 }
 
+import std.traits;
+import std.conv;
+
+private bool glErrorOccured = false;
+
+ReturnType!func cgl(alias func, string file = __FILE__, size_t line = __LINE__)(ParameterTypeTuple!func t){
+	static if(!is(ReturnType!func == void)){
+		auto ret = func(t);
+	}else{
+		func(t);
+	}
+
+	if(glErrorOccured){
+		throw new Exception(func.stringof ~ " is where the last error occured", file, line);
+
+	}else if(auto e = CheckGLError()){
+		throw new Exception(func.stringof ~ " " ~ e, file, line);
+	}
+
+	static if(!is(ReturnType!func == void)){
+		return ret;
+	}
+}
+private string GLDebugEnumsToString(GLenum source, GLenum type, GLenum severity){
+	string ret = "";
+
+	switch(severity){
+		case GL_DEBUG_SEVERITY_HIGH: ret ~= "[high]"; break;
+		case GL_DEBUG_SEVERITY_MEDIUM: ret ~= "[medium]"; break;
+		case GL_DEBUG_SEVERITY_LOW: ret ~= "[low]"; break;
+		case GL_DEBUG_SEVERITY_NOTIFICATION: ret ~= "[notification]"; break;
+		default: ret ~= "[unknown]";
+	}
+
+	ret ~= "\tsrc:";
+
+	switch(source){
+		case GL_DEBUG_SOURCE_API: ret ~= " API"; break;
+		case GL_DEBUG_SOURCE_WINDOW_SYSTEM: ret ~= " WINDOW_SYSTEM"; break;
+		case GL_DEBUG_SOURCE_SHADER_COMPILER: ret ~= " SHADER_COMPILER"; break;
+		case GL_DEBUG_SOURCE_THIRD_PARTY: ret ~= " THIRD_PARTY"; break;
+		case GL_DEBUG_SOURCE_APPLICATION: ret ~= " APPLICATION"; break;
+		case GL_DEBUG_SOURCE_OTHER: ret ~= " OTHER"; break;
+		default: ret ~= " unknown";
+	}
+
+	ret ~= "\ttype:";
+
+	switch(type){
+		case GL_DEBUG_TYPE_ERROR: ret ~= " error"; break;
+		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: ret ~= " deprecated behaviour"; break;
+		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR: ret ~= " undefined behaviour"; break;
+		case GL_DEBUG_TYPE_PORTABILITY: ret ~= " portability issue"; break;
+		case GL_DEBUG_TYPE_PERFORMANCE: ret ~= " performance issue"; break;
+		case GL_DEBUG_TYPE_MARKER: ret ~= " marker"; break;
+		case GL_DEBUG_TYPE_PUSH_GROUP: ret ~= " push group"; break;
+		case GL_DEBUG_TYPE_POP_GROUP: ret ~= " pop group"; break;
+		case GL_DEBUG_TYPE_OTHER: ret ~= " other"; break;
+		default: ret ~= " unknown";
+	}
+
+	return ret;
+}
+
+extern(C) private void GLDebugFunc(GLenum source, GLenum type, GLuint id,
+	GLenum severity, GLsizei length, const (GLchar)* message,
+	GLvoid* userParam) nothrow{
+
+	import std.string;
+
+	try {
+		auto _glErrorOccured = cast(bool*) userParam;
+		if(_glErrorOccured) *_glErrorOccured = true;
+		
+		Log(GLDebugEnumsToString(source, type, severity), "\t\tid: ", id, "\n\t", message.fromStringz);
+	}catch(Exception e){
+
+	}
+}
+private string CheckGLError(){
+	GLuint error = glGetError();
+	switch(error){
+		case GL_INVALID_ENUM:
+			return "InvalidEnum";
+
+		case GL_INVALID_VALUE:
+			return "InvalidValue";
+
+		case GL_INVALID_OPERATION:
+			return "InvalidOperation";
+
+		case GL_INVALID_FRAMEBUFFER_OPERATION:
+			return "InvalidFramebufferOperation";
+
+		case GL_OUT_OF_MEMORY:
+			return "OutOfMemory";
+
+		case GL_NO_ERROR:
+			return null;
+
+		default:
+			return "Unhandled GL Error";
+	}
+}
+
+void InitGLDebugging(){
+	cgl!glEnable(GL_DEBUG_OUTPUT);
+	cgl!glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+
+	cgl!glDebugMessageCallback(&GLDebugFunc, cast(const(void)*) &glErrorOccured);
+}
+
 void GraphicsTests(){
-	auto win = new Window(512, 512, "Shader");
+	auto win = new Window(800, 600, "Shader");
 	auto inp = new Input(win);
+	auto rend = new Renderer(win);
+
 	uint vao;
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
+	cgl!glGenVertexArrays(1, &vao);
+	cgl!glBindVertexArray(vao);
+	InitGLDebugging();
 
 	auto sh = ShaderProgram.LoadFromFile("shader.shader");
-	glUseProgram(sh.glprogram);
+	cgl!glUseProgram(sh.glprogram);
 
-	glFrontFace(GL_CW);
+	cgl!glEnable(GL_DEPTH_TEST);
+	cgl!glEnable(GL_CULL_FACE);
+	cgl!glEnable(GL_BLEND);
+	cgl!glFrontFace(GL_CW);
+
+	cgl!glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	uint vbo = 0;
+	uint ebo = 0;
 	auto data = [
-		vec2(-1,-1),
-		vec2(-1, 1),
-		vec2( 1, 1),
-
-		vec2(-1,-1),
-		vec2( 1,-1),
-		vec2( 1, 1),
+		vec3(-1, 1,-1),
+		vec3( 1,-1,-1),
+		vec3( 1, 1, 1),
+		vec3(-1,-1, 1),
+	];
+	ubyte[] indicies = [
+		0,1,2,
+		0,2,3,
+		0,3,1,
+		1,3,2,
 	];
 
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, data.length*vec2.sizeof, data.ptr, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	cgl!glGenBuffers(2, *[&vbo, &ebo].ptr);
+	cgl!glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	cgl!glBufferData(GL_ARRAY_BUFFER, data.length*vec3.sizeof, data.ptr, GL_STATIC_DRAW);
+	cgl!glBindBuffer(GL_ARRAY_BUFFER, 0);
+	cgl!glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	cgl!glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicies.length*vec3.sizeof, indicies.ptr, GL_STATIC_DRAW);
+	cgl!glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-	glEnableVertexAttribArray(0);
+	cgl!glEnableVertexAttribArray(0);
+
+	mat4 projection;
+	{
+		enum fovy = 80f * PI / 180f;
+		enum aspect = 8f/6f;
+
+		enum n = 0.1f;
+		enum f = 50f;
+
+		enum r = 1f/tan(fovy/2f);
+		enum t = r*aspect;
+		projection = mat4(
+			r, 0,   0,   0,
+			0,   t, 0,   0,
+			0,   0,   -(f+n)/(f-n), -2*f*n/(f-n),
+			0,   0,   -1,   0,
+		);
+	}
+	sh.SetUniform("projection", projection);
+
+	cgl!glClear(GL_DEPTH_BUFFER_BIT);
 
 	float t = 0f;
 	while(win.IsOpen()){
 		t += 0.04f;
+
+		auto rot = PI * t;
+		auto rotation = mat4(
+			cos(rot/5f), 0, sin(rot/5f), 0,
+			0, 1, 0, 0,
+			-sin(rot/5f), 0, cos(rot/5f), 0,
+			0, 0, 0, 1,
+		);
+
+		rotation = rotation * mat4(
+			1, 0, 0, 0, 
+			0, cos(rot/7f), -sin(rot/7f), 0,
+			0, sin(rot/7f), cos(rot/7f), 0,
+			0, 0, 0, 1,
+		);
+
+		auto translation = mat4(
+			1, 0, 0, 0,
+			0, 1, 0, sin(t*0.3*2f*PI)*0.1,
+			0, 0, 1, -4f + sin(t)*0f,
+			0, 0, 0, 1,
+		);
+
+		sh.SetUniform("modelview", translation*rotation);
 
 		if(inp.KeyPressed(SDLK_ESCAPE)) win.Close();
 
 		win.FrameBegin();
 		win.Update();
 
-		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+		cgl!glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, null);
-		glVertexAttrib3f(1, 0f, 1f, 1f);
-		sh.SetUniform("frequency", sin(t)*9f+10f);
+		cgl!glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		cgl!glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 
-		glDrawArrays(GL_TRIANGLES, 0, cast(int) data.length);
+		auto c = t*0.4;
 
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		// Outer loop
+		cgl!glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, null);
+		cgl!glVertexAttrib2f(1, c, 1f);
+		cgl!glDrawElements(GL_LINE_LOOP, cast(int) indicies.length, GL_UNSIGNED_BYTE, null);
 
-		win.Swap();
+		// Inner loop
+		auto scale = (mat4.identity*(0.93f));
+		scale[3,3] = 1f;
+		sh.SetUniform("modelview", translation*rotation*scale);
+
+		cgl!glVertexAttrib2f(1, c*0.3f, 0.5f);
+		cgl!glDrawElements(GL_LINE_LOOP, cast(int) indicies.length, GL_UNSIGNED_BYTE, null);
+
+		// Inverted tetra
+		scale = (mat4.identity*-(0.4f + sin(t)*0.1f));
+		scale[3,3] = 1f;
+		sh.SetUniform("modelview", translation*rotation*scale);
+
+		cgl!glVertexAttrib2f(1, c*5f, 1f);
+		cgl!glDrawElements(GL_LINE_LOOP, cast(int) indicies.length, GL_UNSIGNED_BYTE, null);
+
+		// Solid tetra
+		scale = (mat4.identity*-(0.2f + sin(t)*0.1f));
+		scale[3,3] = 1f;
+		sh.SetUniform("modelview", translation*rotation*scale);
+
+		cgl!glVertexAttrib2f(1, c*0.3f, 0.2f);
+		cgl!glDrawElements(GL_TRIANGLES, cast(int) indicies.length, GL_UNSIGNED_BYTE, null);
+
+		cgl!glBindBuffer(GL_ARRAY_BUFFER, 0);
+		cgl!glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+		rend.Draw();
 	}
 }
 

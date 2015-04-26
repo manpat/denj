@@ -22,8 +22,25 @@ string GetGLMangle(T)(){
 		}
 	}
 
-	static if(is(T == Vector!(D, sT), int D, sT)){
-		return min(max(D, 1), 4).to!string ~ GetGLBase!sT;
+	static if(isVec!T){
+		static if(clamp(T.Dimensions, 1, 4) == T.Dimensions){
+			return clamp(T.Dimensions, 1, 4).to!string ~ GetGLBase!(T.BaseType);
+		}else{
+			static assert(0, "GLMangle of Vector!" ~ T.Dimensions.to!string ~ " not supported");
+		}
+
+	}else static if(isMat!T){
+		enum C = T.Columns;
+		enum R = T.Rows;
+
+		static if(C == R && C >= 2 && C <= 4){
+			return C.to!string ~ GetGLBase!(T.BaseType);
+		}else static if(clamp(C, 2, 4) == C && clamp(R, 2, 4) == R){
+			return C.to!string ~ "x" ~ R.to!string ~ GetGLBase!(T.BaseType);
+		}else{
+			static assert(0, "GLMangle of Matrix(" ~ C.to!string ~ ", " ~ R.to!string ~ ") not supported");
+		}
+
 	}else{
 		return "1"~GetGLBase!T;
 	}

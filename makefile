@@ -1,9 +1,9 @@
 SOURCE=$(wildcard *.d */*.d)
 
-all: $(SOURCE)
+build: $(SOURCE)
 	dmd $^ -ofbuild
 
-run: all
+run: build
 	# @optirun ./build
 	./build
 

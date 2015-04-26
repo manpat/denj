@@ -12,9 +12,9 @@ struct Vector(int Dim, T = float){
 	enum Dimensions = Dim;
 	alias BaseType = T;
 
-	T[Dim] data;
+	public {
+		T[Dim] data;
 
-	private{
 		@property ref T get(int i)(){
 			return data[i];
 		}

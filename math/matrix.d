@@ -11,8 +11,15 @@ import denj.math.vector;
 //     zx zy zz 0
 //     tx ty tz 1
 
-struct Matrix(int Columns, int Rows, T = float) {
-	alias Matrix!(Columns, Rows, T) thisType;
+template isMat(T){
+	enum isMat = is(T == Matrix!(C, R, sT), int C, int R, sT);
+}
+
+struct Matrix(int _Columns, int _Rows, T = float) {
+	alias Matrix!(_Columns, _Rows, T) thisType;
+	enum Columns = _Columns;
+	enum Rows = _Rows;
+	alias BaseType = T;
 
 	public {
 		T[Columns * Rows] data;
@@ -51,6 +58,16 @@ struct Matrix(int Columns, int Rows, T = float) {
 		assert(y < Rows);
 
 		return data[x + y * Columns];		
+	}
+
+	auto opBinary(string op)(auto ref T rhs) const{
+		static if(op == "*"){
+			thisType ret;
+			ret.data[] = data[] * rhs;
+			return ret;
+		}else{
+			static assert(0, "matrix "~op~" operation not implemented");
+		}
 	}
 
 	auto opBinary(string op, int RHSColumns, int RHSRows, RHST)(auto ref Matrix!(RHSColumns, RHSRows, RHST) rhs) const{

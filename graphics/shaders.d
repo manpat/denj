@@ -60,8 +60,9 @@ class ShaderProgram {
 
 		GLint status;
 		glGetShaderiv(glunit, GL_COMPILE_STATUS, &status);
-		if(status == GL_FALSE){
+		if(status != GL_TRUE){
 			char[] buffer = new char[1024];
+			buffer[] = 0;
 			glGetShaderInfoLog(glunit, 1024, null, buffer.ptr);
 
 			enum lineNumberRegex = ctRegex!`[\d]+:([\d]+)\([\d]+\):`;
@@ -103,12 +104,14 @@ class ShaderProgram {
 
 	void SetUniform(T)(string s, T val){
 		enum mangle = GetGLMangle!T;
-		// uint pos = glGetUniformLocation(glprogram, (s~"\0").ptr);
+
 		int pos = uniformLocations.get(s, -1);
 		if(pos < 0) Log("Tried to set non existent uniform '", s, "'");
 
 		static if(isVec!T){
 			mixin("glUniform"~mangle~"v(pos, 1, val.data.ptr);");
+		}else static if(isMat!T){
+			mixin("glUniformMatrix"~mangle~"v(pos, 1, GL_TRUE, val.data.ptr);");
 		}else{
 			mixin("glUniform"~mangle~"(pos, val);");
 		}
