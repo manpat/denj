@@ -45,3 +45,31 @@ string GetGLMangle(T)(){
 		return "1"~GetGLBase!T;
 	}
 }
+
+template GetGLType(T){
+	import std.traits;
+	
+	static if(isFloatingPoint!T){
+		enum GetGLType = GL_FLOAT;
+	}else static if(isBoolean!T){
+		enum GetGLType = GL_BOOL;
+	}else static if(isIntegral!T){
+		static if(T.sizeof == 1){
+			enum Base = "BYTE";
+		}else static if(T.sizeof == 2) {
+			enum Base = "SHORT";
+		}else static if(T.sizeof == 4) {
+			enum Base = "INT";
+		}else{
+			static assert(0, "GetGLType failed for type " ~ T.stringof);
+		}
+
+		static if(isUnsigned!T){
+			enum GetGLType = mixin("GL_UNSIGNED_"~Base);
+		}else{
+			enum GetGLType = mixin("GL_"~Base);
+		}
+	}else{
+		static assert(0, "Can't convert "  ~ T.stringof ~ " to GL type enum");
+	}
+}

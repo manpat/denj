@@ -135,123 +135,12 @@ void InputTests(){
 	}
 }
 
-import std.traits;
-import std.conv;
-
-private bool glErrorOccured = false;
-
-ReturnType!func cgl(alias func, string file = __FILE__, size_t line = __LINE__)(ParameterTypeTuple!func t){
-	static if(!is(ReturnType!func == void)){
-		auto ret = func(t);
-	}else{
-		func(t);
-	}
-
-	if(glErrorOccured){
-		throw new Exception(func.stringof ~ " is where the last error occured", file, line);
-
-	}else if(auto e = CheckGLError()){
-		throw new Exception(func.stringof ~ " " ~ e, file, line);
-	}
-
-	static if(!is(ReturnType!func == void)){
-		return ret;
-	}
-}
-private string GLDebugEnumsToString(GLenum source, GLenum type, GLenum severity){
-	string ret = "";
-
-	switch(severity){
-		case GL_DEBUG_SEVERITY_HIGH: ret ~= "[high]"; break;
-		case GL_DEBUG_SEVERITY_MEDIUM: ret ~= "[medium]"; break;
-		case GL_DEBUG_SEVERITY_LOW: ret ~= "[low]"; break;
-		case GL_DEBUG_SEVERITY_NOTIFICATION: ret ~= "[notification]"; break;
-		default: ret ~= "[unknown]";
-	}
-
-	ret ~= "\tsrc:";
-
-	switch(source){
-		case GL_DEBUG_SOURCE_API: ret ~= " API"; break;
-		case GL_DEBUG_SOURCE_WINDOW_SYSTEM: ret ~= " WINDOW_SYSTEM"; break;
-		case GL_DEBUG_SOURCE_SHADER_COMPILER: ret ~= " SHADER_COMPILER"; break;
-		case GL_DEBUG_SOURCE_THIRD_PARTY: ret ~= " THIRD_PARTY"; break;
-		case GL_DEBUG_SOURCE_APPLICATION: ret ~= " APPLICATION"; break;
-		case GL_DEBUG_SOURCE_OTHER: ret ~= " OTHER"; break;
-		default: ret ~= " unknown";
-	}
-
-	ret ~= "\ttype:";
-
-	switch(type){
-		case GL_DEBUG_TYPE_ERROR: ret ~= " error"; break;
-		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: ret ~= " deprecated behaviour"; break;
-		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR: ret ~= " undefined behaviour"; break;
-		case GL_DEBUG_TYPE_PORTABILITY: ret ~= " portability issue"; break;
-		case GL_DEBUG_TYPE_PERFORMANCE: ret ~= " performance issue"; break;
-		case GL_DEBUG_TYPE_MARKER: ret ~= " marker"; break;
-		case GL_DEBUG_TYPE_PUSH_GROUP: ret ~= " push group"; break;
-		case GL_DEBUG_TYPE_POP_GROUP: ret ~= " pop group"; break;
-		case GL_DEBUG_TYPE_OTHER: ret ~= " other"; break;
-		default: ret ~= " unknown";
-	}
-
-	return ret;
-}
-
-extern(C) private void GLDebugFunc(GLenum source, GLenum type, GLuint id,
-	GLenum severity, GLsizei length, const (GLchar)* message,
-	GLvoid* userParam) nothrow{
-
-	import std.string;
-
-	try {
-		auto _glErrorOccured = cast(bool*) userParam;
-		if(_glErrorOccured) *_glErrorOccured = true;
-		
-		Log(GLDebugEnumsToString(source, type, severity), "\t\tid: ", id, "\n\t", message.fromStringz);
-	}catch(Exception e){
-
-	}
-}
-private string CheckGLError(){
-	GLuint error = glGetError();
-	switch(error){
-		case GL_INVALID_ENUM:
-			return "InvalidEnum";
-
-		case GL_INVALID_VALUE:
-			return "InvalidValue";
-
-		case GL_INVALID_OPERATION:
-			return "InvalidOperation";
-
-		case GL_INVALID_FRAMEBUFFER_OPERATION:
-			return "InvalidFramebufferOperation";
-
-		case GL_OUT_OF_MEMORY:
-			return "OutOfMemory";
-
-		case GL_NO_ERROR:
-			return null;
-
-		default:
-			return "Unhandled GL Error";
-	}
-}
-
-void InitGLDebugging(){
-	cgl!glEnable(GL_DEBUG_OUTPUT);
-	cgl!glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-
-	cgl!glDebugMessageCallback(&GLDebugFunc, cast(const(void)*) &glErrorOccured);
-}
+import denj.graphics.errorchecking;
 
 void GraphicsTests(){
 	auto win = new Window(800, 600, "Shader");
 	auto inp = new Input(win);
 	auto rend = new Renderer(win, GLContextSettings(3, 2, true));
-	InitGLDebugging();
 
 	auto sh = ShaderProgram.LoadFromFile("shader.shader");
 	cgl!glUseProgram(sh.glprogram);
@@ -279,14 +168,28 @@ void GraphicsTests(){
 	];
 
 	auto vbo = new Buffer!vec3();
+	auto cbo = new Buffer!vec2();
 	auto ebo = new Buffer!ubyte(BufferType.Index);
 	vbo.Upload(data);
 	ebo.Upload(indicies);
 
-	sh.EnableAttributeArray(0); // Should be handled by renderer
+	{
+		cbo.Bind();
+		cbo.AllocateStorage(data.length);
+		auto cbuff = cbo.Map()[0..cbo.length];
+
+		float h = 0f;
+		foreach(ref c; cbuff){
+			c = vec2(h,1f);
+			h += 0.25f;
+		}
+
+		cbo.Unmap();
+		cbo.Unbind();
+	}
 
 	mat4 projection;
-	{
+	{ // TODO: Move to matrix math module
 		enum fovy = 80f * PI / 180f;
 		enum aspect = 8f/6f;
 
@@ -305,11 +208,16 @@ void GraphicsTests(){
 	sh.SetUniform("projection", projection);
 
 	cgl!glClear(GL_DEPTH_BUFFER_BIT);
+	cgl!glPointSize(4f);
 
 	float t = 0f;
 	while(win.IsOpen()){
+		win.FrameBegin();
+		win.Update();
+
 		t += 0.04f;
 
+		// TODO: Move transform code to matrix math module
 		auto rot = PI * t;
 		auto rotation = mat4(
 			cos(rot/5f), 0, sin(rot/5f), 0,
@@ -336,19 +244,22 @@ void GraphicsTests(){
 
 		if(inp.KeyPressed(SDLK_ESCAPE)) win.Close();
 
-		win.FrameBegin();
-		win.Update();
-
 		cgl!glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
 		vbo.Bind();
-		ebo.Bind();
+		rend.SetAttribute(0, vbo);
+		cbo.Bind();
+		rend.SetAttribute(1, cbo);
 
 		auto c = t*0.4;
 
+		// Outer points
+		cgl!glDrawArrays(GL_POINTS, 0, cast(int) vbo.length);
+
+		// Bind index buffer
+		ebo.Bind();
+
 		// Outer loop
-		cgl!glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, null);
-		cgl!glVertexAttrib2f(1, c, 1f);
 		cgl!glDrawElements(GL_LINE_LOOP, cast(int) ebo.length, GL_UNSIGNED_BYTE, null);
 
 		// Inner loop
@@ -356,7 +267,7 @@ void GraphicsTests(){
 		scale[3,3] = 1f;
 		sh.SetUniform("modelview", translation*rotation*scale);
 
-		cgl!glVertexAttrib2f(1, c*0.3f, 0.5f);
+		rend.SetAttribute(1, vec2(c*0.3f, 1f));
 		cgl!glDrawElements(GL_LINE_LOOP, cast(int) ebo.length, GL_UNSIGNED_BYTE, null);
 
 		// Inverted tetra
@@ -364,7 +275,7 @@ void GraphicsTests(){
 		scale[3,3] = 1f;
 		sh.SetUniform("modelview", translation*rotation*scale);
 
-		cgl!glVertexAttrib2f(1, c*5f, 1f);
+		rend.SetAttribute(1, cbo);
 		cgl!glDrawElements(GL_LINE_LOOP, cast(int) ebo.length, GL_UNSIGNED_BYTE, null);
 
 		// Solid tetra
@@ -372,11 +283,12 @@ void GraphicsTests(){
 		scale[3,3] = 1f;
 		sh.SetUniform("modelview", translation*rotation*scale);
 
-		cgl!glVertexAttrib2f(1, c*2f, 0.2f);
+		rend.SetAttribute(1, vec2(c*5f, 0.8f));
 		cgl!glDrawElements(GL_TRIANGLES, cast(int) ebo.length, GL_UNSIGNED_BYTE, null);
 
 		vbo.Unbind();
 		ebo.Unbind();
+		cbo.Unbind();
 
 		rend.Swap();
 	}

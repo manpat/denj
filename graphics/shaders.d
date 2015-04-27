@@ -1,5 +1,6 @@
 module denj.graphics.shaders;
 
+import denj.graphics.errorchecking;
 import denj.graphics.common;
 import denj.utility;
 import denj.math;
@@ -15,45 +16,45 @@ class ShaderProgram {
 	}
 
 	this()(auto ref ShaderInfo info){
-		glprogram = glCreateProgram();
+		glprogram = cgl!glCreateProgram();
 		uint[] shaderUnits;
 
 		foreach(ref u; info.units){
 			auto unit = CompileUnit(info, u);
-			glAttachShader(glprogram, unit);
+			cgl!glAttachShader(glprogram, unit);
 			shaderUnits ~= unit;
 		}
 
-		glLinkProgram(glprogram);
+		cgl!glLinkProgram(glprogram);
 
 		foreach(u; shaderUnits){
-			glDeleteShader(u);
+			cgl!glDeleteShader(u);
 		}
 
 		GLint status;
-		glGetProgramiv(glprogram, GL_LINK_STATUS, &status);
+		cgl!glGetProgramiv(glprogram, GL_LINK_STATUS, &status);
 		if(status == GL_FALSE){
 			int logLength = 0;
-			glGetProgramiv(glprogram, GL_INFO_LOG_LENGTH, &logLength);
+			cgl!glGetProgramiv(glprogram, GL_INFO_LOG_LENGTH, &logLength);
 
 			char[] buffer = new char[logLength];
-			glGetProgramInfoLog(glprogram, logLength, null, buffer.ptr);
+			cgl!glGetProgramInfoLog(glprogram, logLength, null, buffer.ptr);
 
 			Log(info.filename, ": ", buffer);
 			throw new Exception("Program link fail");
 		}
 
 		// Perhaps make this optional
-		glValidateProgram(glprogram);
+		cgl!glValidateProgram(glprogram);
 
 		status = 0;
-		glGetProgramiv(glprogram, GL_VALIDATE_STATUS, &status);
+		cgl!glGetProgramiv(glprogram, GL_VALIDATE_STATUS, &status);
 		if(status == GL_FALSE){
 			int logLength = 0;
-			glGetProgramiv(glprogram, GL_INFO_LOG_LENGTH, &logLength);
+			cgl!glGetProgramiv(glprogram, GL_INFO_LOG_LENGTH, &logLength);
 
 			char[] buffer = new char[logLength];
-			glGetProgramInfoLog(glprogram, logLength, null, buffer.ptr);
+			cgl!glGetProgramInfoLog(glprogram, logLength, null, buffer.ptr);
 
 			Log(info.filename, ": ", buffer);
 			throw new Exception("Program validation fail");
@@ -61,7 +62,7 @@ class ShaderProgram {
 
 		foreach(u; info.data){
 			if(u.type == ShaderData.Type.Uniform){
-				uniformLocations[u.name.idup] = glGetUniformLocation(glprogram, u.name.toStringz);
+				uniformLocations[u.name.idup] = cgl!glGetUniformLocation(glprogram, u.name.toStringz);
 			}
 		}
 	}
@@ -70,16 +71,16 @@ class ShaderProgram {
 		char[] src = "#version "~info.shaderVersion~'\n' ~ unit.src ~ '\0';
 		auto srcp = src.ptr;
 
-		uint glunit = glCreateShader(unit.stage);
-		glShaderSource(glunit, 1, &srcp, null);
-		glCompileShader(glunit);
+		uint glunit = cgl!glCreateShader(unit.stage);
+		cgl!glShaderSource(glunit, 1, &srcp, null);
+		cgl!glCompileShader(glunit);
 
 		GLint status;
-		glGetShaderiv(glunit, GL_COMPILE_STATUS, &status);
+		cgl!glGetShaderiv(glunit, GL_COMPILE_STATUS, &status);
 		if(status != GL_TRUE){
 			char[] buffer = new char[1024];
 			buffer[] = 0;
-			glGetShaderInfoLog(glunit, 1024, null, buffer.ptr);
+			cgl!glGetShaderInfoLog(glunit, 1024, null, buffer.ptr);
 
 			enum lineNumberRegex = ctRegex!`[\d]+:([\d]+)\([\d]+\):`;
 			char[] replaceFunc(Captures!(char[]) m){
@@ -129,16 +130,12 @@ class ShaderProgram {
 		enum mangle = GetGLMangle!T;
 
 		static if(isVec!T){
-			mixin("glUniform"~mangle~"v(pos, 1, val.data.ptr);");
+			mixin("cgl!glUniform"~mangle~"v(pos, 1, val.data.ptr);");
 		}else static if(isMat!T){
-			mixin("glUniformMatrix"~mangle~"v(pos, 1, GL_TRUE, val.data.ptr);");
+			mixin("cgl!glUniformMatrix"~mangle~"v(pos, 1, GL_TRUE, val.data.ptr);");
 		}else{
-			mixin("glUniform"~mangle~"(pos, val);");
+			mixin("cgl!glUniform"~mangle~"(pos, val);");
 		}		
-	}
-
-	void EnableAttributeArray(int pos){
-		glEnableVertexAttribArray(pos);
 	}
 }
 
