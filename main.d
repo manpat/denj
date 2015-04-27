@@ -206,6 +206,12 @@ void GraphicsTests(){
 		);
 	}
 	sh.SetUniform("projection", projection);
+	sh.SetUniform("view", mat4(
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, -4f,
+		0, 0, 0, 1,
+	));
 
 	cgl!glClear(GL_DEPTH_BUFFER_BIT);
 	cgl!glPointSize(4f);
@@ -236,11 +242,11 @@ void GraphicsTests(){
 		auto translation = mat4(
 			1, 0, 0, 0,
 			0, 1, 0, sin(t*0.3*2f*PI)*0.1,
-			0, 0, 1, -4f + sin(t)*0f,
+			0, 0, 1, 0,
 			0, 0, 0, 1,
 		);
 
-		sh.SetUniform("modelview", translation*rotation);
+		sh.SetUniform("model", translation*rotation);
 
 		if(inp.KeyPressed(SDLK_ESCAPE)) win.Close();
 
@@ -265,7 +271,7 @@ void GraphicsTests(){
 		// Inner loop
 		auto scale = (mat4.identity*(0.93f));
 		scale[3,3] = 1f;
-		sh.SetUniform("modelview", translation*rotation*scale);
+		sh.SetUniform("model", translation*rotation*scale);
 
 		rend.SetAttribute(1, vec2(c*0.3f, 1f));
 		cgl!glDrawElements(GL_LINE_LOOP, cast(int) ebo.length, GL_UNSIGNED_BYTE, null);
@@ -273,18 +279,41 @@ void GraphicsTests(){
 		// Inverted tetra
 		scale = (mat4.identity*-(0.4f + sin(t)*0.1f));
 		scale[3,3] = 1f;
-		sh.SetUniform("modelview", translation*rotation*scale);
+		sh.SetUniform("model", translation*rotation*scale);
 
 		rend.SetAttribute(1, cbo);
 		cgl!glDrawElements(GL_LINE_LOOP, cast(int) ebo.length, GL_UNSIGNED_BYTE, null);
 
 		// Solid tetra
-		scale = (mat4.identity*-(0.2f + sin(t)*0.1f));
+		scale = (mat4.identity*-(0.3f + sin(t)*0.15f));
 		scale[3,3] = 1f;
-		sh.SetUniform("modelview", translation*rotation*scale);
+		sh.SetUniform("model", translation*rotation*scale);
 
 		rend.SetAttribute(1, vec2(c*5f, 0.8f));
 		cgl!glDrawElements(GL_TRIANGLES, cast(int) ebo.length, GL_UNSIGNED_BYTE, null);
+
+		// Orbiter
+		auto orbit = mat4(
+			cos(-rot/12f), 0, sin(-rot/12f), 0,
+			0, 1, 0, 0,
+			-sin(-rot/12f), 0, cos(-rot/12f), 0,
+			0, 0, 0, 1,
+		) * mat4(
+			1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, 1, -2f,
+			0, 0, 0, 1,
+		);
+
+		scale = (mat4.identity*-(0.3f + sin(t*0.5f)*0.08f));
+		scale[3,3] = 1f;
+
+		sh.SetUniform("model", orbit*rotation*scale);
+		rend.SetAttribute(1, vec2(c*0.1f, 0.5f));
+		cgl!glDrawElements(GL_TRIANGLES, cast(int) ebo.length, GL_UNSIGNED_BYTE, null);
+
+		rend.SetAttribute(1, vec2(c*0.1f, 1f));
+		cgl!glDrawElements(GL_LINE_LOOP, cast(int) ebo.length, GL_UNSIGNED_BYTE, null);
 
 		vbo.Unbind();
 		ebo.Unbind();

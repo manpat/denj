@@ -84,7 +84,7 @@ class Renderer {
 	// Handles the enabling/disabling of vertex attrib arrays
 	void SetAttribute(T)(int attr, T valorbuf){
 		static if(isBuffer!T){
-			// TODO: auto bind buffers
+			// TODO: Auto bind buffers
 			// TODO: Add code path for glVertexAttribIPointer for integer types
 			// TODO: Add optional stride if buffer base type is struct
 
