@@ -1,6 +1,7 @@
 module denj.math.matrix;
 
 import std.math;
+import std.algorithm : min, max;
 import denj.math.vector;
 
 // Column major
@@ -44,6 +45,25 @@ struct Matrix(int _Columns, int _Rows, T = float) {
 	}
 	this(T[Columns * Rows] _data...){
 		data[] = _data[];
+	}
+
+	static thisType Scale(T s){
+		thisType ret = thisType.identity;
+		foreach(i; 0..min(min(Columns, Rows), 3)){
+			ret[i,i] = s;
+		}
+
+		return ret;
+	}
+
+	static if(Columns == 4 && Rows >= 3)
+	static thisType Translation(vec3 t) {
+		thisType ret = thisType.identity;
+		ret[Columns-1, 0] = t.data[0];
+		ret[Columns-1, 1] = t.data[1];
+		ret[Columns-1, 2] = t.data[2];
+
+		return ret;
 	}
 
 	ref T opIndex(size_t x, size_t y){

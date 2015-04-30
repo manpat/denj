@@ -84,10 +84,10 @@ class Renderer {
 	// Handles the enabling/disabling of vertex attrib arrays
 	void SetAttribute(T)(int attr, T valorbuf){
 		static if(isBuffer!T){
-			// TODO: Auto bind buffers
 			// TODO: Add code path for glVertexAttribIPointer for integer types
 			// TODO: Add optional stride if buffer base type is struct
 
+			valorbuf.Bind();
 			static if(__traits(isScalar, T.BaseType)){
 				cgl!glVertexAttribPointer(attr, valorbuf.elements, GetGLType!(T.BaseType), GL_FALSE, 0, null);
 			}else static if(isVec!(T.BaseType)){
