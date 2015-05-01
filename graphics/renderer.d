@@ -88,13 +88,7 @@ class Renderer {
 			// TODO: Add optional stride if buffer base type is struct
 
 			valorbuf.Bind();
-			static if(__traits(isScalar, T.BaseType)){
-				cgl!glVertexAttribPointer(attr, valorbuf.elements, GetGLType!(T.BaseType), GL_FALSE, 0, null);
-			}else static if(isVec!(T.BaseType)){
-				cgl!glVertexAttribPointer(attr, valorbuf.elements, GetGLType!(T.BaseType.BaseType), GL_FALSE, 0, null);
-			}else{
-				static assert(0, "Buffer of type "~T.stringof~" not able to be bound to attributes");
-			}
+			cgl!glVertexAttribPointer(attr, valorbuf.elements, valorbuf.glBaseType, GL_FALSE, 0, null);
 
 			EnableAttributeArray(attr);
 		}else{
@@ -117,8 +111,14 @@ class Renderer {
 	}
 
 	// Calls glDraw(Arrays|Elements)[Instanced] based on bound buffers
-	void Draw(){
-
+	void Draw(uint drawMode){
+		if(IsBufferBound(BufferType.Index)){
+			auto ibo = GetBoundBuffer(BufferType.Index);
+			cgl!glDrawElements(drawMode, cast(int) ibo.length, ibo.glBaseType, null);
+		}else{
+			auto vbo = GetBoundBuffer(BufferType.Array);
+			cgl!glDrawArrays(drawMode, 0, cast(int) vbo.length);
+		}
 	}
 
 	void EnableAttributeArray(uint attr){

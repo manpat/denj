@@ -6,9 +6,10 @@ import denj.utility;
 import denj.math;
 
 private __gshared {
-	uint[BufferType] boundBuffers;
+	Buffer[BufferType] boundBuffers;
 }
 
+// TODO: move all this shit back into Buffer
 enum BufferType {
 	Array = GL_ARRAY_BUFFER,
 	Index = GL_ELEMENT_ARRAY_BUFFER,
@@ -28,21 +29,31 @@ enum BufferUsage {
 }
 
 template isBuffer(T){
-	static if(is(T == Buffer!sT, sT)){
+	// static if(is(T == Buffer!sT, sT)){
+	static if(is(T == Buffer)){
 		enum isBuffer = true;
 	}else{
 		enum isBuffer = false;
 	}
 }
 
-class Buffer(T) {
-	alias BaseType = T;
+bool IsBufferBound(BufferType t){
+	return boundBuffers.get(t, null) !is null;
+}
 
+Buffer GetBoundBuffer(BufferType t){
+	return boundBuffers.get(t, null);
+}
+
+class Buffer {
 	private {
 		GLuint glbuffer;
 		BufferType type;
 		BufferUsage usage;
-		size_t size;
+		size_t count;
+		GLuint basegltype;
+		uint typeelements;
+		size_t elementsize;
 	}
 
 	this(BufferType _type = BufferType.Array, BufferUsage _usage = BufferUsage.StaticDraw){
@@ -51,7 +62,10 @@ class Buffer(T) {
 
 		type = _type;
 		usage = _usage;
-		size = 0;
+		basegltype = 0;
+		count = 0;
+		typeelements = 0;
+		elementsize = 0;
 	}
 
 	~this(){
@@ -61,58 +75,81 @@ class Buffer(T) {
 
 	@property {
 		size_t length(){
-			return size;
+			return count;
 		}
 
 		uint elements(){
-			static if(isVec!T){
-				return T.Dimensions;
-			}else static if(isMat!T){
-				assert(0, "element counts for Matrix buffers not supported");
-				return 1;
-			}else{ // scalar
-				return 1;
-			}
+			return typeelements;
+		}
+
+		uint glBaseType(){
+			return basegltype;
 		}
 	}
 
-	void Upload(T[] data){
-		auto bb = boundBuffers.get(type, 0);
-		if(bb != glbuffer) cgl!glBindBuffer(type, glbuffer);
+	void Upload(T)(T[] data){
+		auto bb = boundBuffers.get(type, null);
+		if(bb != this) cgl!glBindBuffer(type, glbuffer);
 
-		if(data.length == size){
+		if(data.length == count && T.sizeof == elementsize){
 			// Don't reallocate buffer, just update
-			cgl!glBufferSubData(type, 0, size*T.sizeof, data.ptr);
+			cgl!glBufferSubData(type, 0, count*T.sizeof, data.ptr);
 		}else{
 			cgl!glBufferData(type, data.length*T.sizeof, data.ptr, usage);
-			size = data.length;
+			count = data.length;
 		}
 
-		if(bb != glbuffer) cgl!glBindBuffer(type, bb);
+		elementsize = T.sizeof;
+		static if(isVec!T){
+			basegltype = GetGLType!(T.BaseType);
+			typeelements = T.Dimensions;
+
+		}else static if(__traits(isScalar, T)){
+			basegltype = GetGLType!T;
+			typeelements = 1;
+
+		}else{
+			static assert(0, "Can't do it");
+		}
+
+		if(bb && bb != this) cgl!glBindBuffer(type, bb.glbuffer);
 	}
 
 	void Bind(){
 		cgl!glBindBuffer(type, glbuffer);
-		boundBuffers[type] = glbuffer;
+		boundBuffers[type] = this;
 	}
 
 	void Unbind(){
-		if(boundBuffers.get(type, 0) == glbuffer){
+		if(boundBuffers.get(type, null) == this){
 			cgl!glBindBuffer(type, 0);
-			boundBuffers[type] = 0;
+			boundBuffers[type] = null;
 		}
 	}
 
 	// Needs to be bound first
-	void AllocateStorage(size_t _size){
+	void AllocateStorage(T = ubyte)(size_t _size){
 		// Make sure size is within bounds set by opengl
 		cgl!glBufferData(type, _size*T.sizeof, null, usage);
-		size = _size;
+		count = _size;
+		elementsize = T.sizeof;
+
+		static if(isVec!T){
+			basegltype = GetGLType!(T.BaseType);
+			typeelements = T.Dimensions;
+
+		}else static if(__traits(isScalar, T)){
+			basegltype = GetGLType!T;
+			typeelements = 1;
+
+		}else{
+			static assert(0, "Can't do it");
+		}
 	}
 
-	T* Map(){
+	T* Map(T)(){
 		// This mapping is super naïve
-		return cast(T*) cgl!glMapBufferRange(type, 0, size*T.sizeof,
+		return cast(T*) cgl!glMapBufferRange(type, 0, count*elementsize,
 			GL_MAP_READ_BIT|GL_MAP_WRITE_BIT);
 	}
 
