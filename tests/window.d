@@ -10,25 +10,25 @@ import denj.graphics.renderer;
 import std.string;
 
 void WindowTests(){
-	auto window = Window(800, 600, "Thing");
-	auto renderer = Renderer(window);
+	Window.Init(800, 600, "Thing");
+	Renderer.Init();
 
 	// SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
 
-	window.HookSDL(SDL_KEYDOWN, (SDL_Event* e){
+	Window.HookSDL(SDL_KEYDOWN, (SDL_Event* e){
 		Log("window ", e.key.keysym.sym, " is escape? ", e.key.keysym.sym == SDLK_ESCAPE);
 		if(e.key.keysym.sym == SDLK_ESCAPE)
-			window.Close();
+			Window.Close();
 	});
 
-	while(window.IsOpen()){
-		window.FrameBegin();
+	while(Window.IsOpen()){
+		Window.FrameBegin();
 
 		glClearColor(1f, 0f, 0f, 1f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		window.Swap();
-		window.FrameEnd();
+		Window.Swap();
+		Window.FrameEnd();
 		SDL_Delay(50);
 	}
 }

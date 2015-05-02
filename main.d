@@ -12,7 +12,7 @@ import tests.graphics;
 // version = TestMath;
 // version = TestWindow;
 version = TestInput;
-version = TestGraphics;
+// version = TestGraphics;
 // version = RunScratch;
 
 void main(){

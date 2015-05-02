@@ -7,32 +7,36 @@ import denj.system.input;
 import denj.graphics.common;
 import denj.graphics.renderer;
 
-void InputTests(){
-	auto window = Window(200, 200, "InputTest");
-	auto renderer = Renderer(window);
-	auto input = Input(window);
+import std.string;
 
-	while(window.IsOpen()){
-		window.FrameBegin();
-		if(input.GetKeyDown(SDLK_ESCAPE)) {
-			window.Close();
+void InputTests(){
+	Window.Init(200, 200, "InputTest");
+	Renderer.Init(GLContextSettings(3, 2));
+	Input.Init();
+
+	while(Window.IsOpen()){
+		Window.FrameBegin();
+
+		if(Input.GetKeyDown(SDLK_ESCAPE)) {
+			Window.Close();
 			break;
 		}
 
-		if(input.GetKeyDown(SDLK_a)){
+		if(Input.GetKeyDown(SDLK_a)){
 			glClearColor(1,1,0,1);
-		}else if(input.GetKeyUp(SDLK_a)){
+		}else if(Input.GetKeyUp(SDLK_a)){
 			glClearColor(0,1,1,1);
-		}else if(input.GetKey(SDLK_s)){
+		}else if(Input.GetKey(SDLK_s)){
 			glClearColor(1,0,1,1);
 		}else{
-			glClearColor(1,1,1,1);
+			auto g = Input.mx / cast(float) Window.GetWidth();
+			glClearColor(g,g,g,1);
 		}
 
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		window.Swap();
-		window.FrameEnd();
+		Window.Swap();
+		Window.FrameEnd();
 		SDL_Delay(50);
 	}
 }

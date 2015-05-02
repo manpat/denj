@@ -9,6 +9,8 @@ import std.traits;
 import std.regex;
 import std.conv;
 
+
+// TODO: Default program
 class ShaderProgram {
 	public {
 		uint glprogram = 0;

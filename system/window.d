@@ -26,18 +26,18 @@ import derelict.util.exception;
 struct Window {
 	enum AllEvents = SDL_LASTEVENT + 1;
 
-	private {
-		SDL_Window* sdlWindow;
+	static private {
+		SDL_Window* sdlWindow = null;
 		int width, height;
 
 		bool isOpen = false;
 
-		void delegate(SDL_Event*) [uint] eventHooks;
+		void delegate(SDL_Event*) [SDL_EventType] eventHooks;
 		void delegate() [] frameBeginHooks;
 		void delegate() [] frameEndHooks;
 	}
 
-	this(int _width, int _height, string title){
+	static void Init(int _width, int _height, string title){
 		width = _width;
 		height = _height;
 
@@ -71,18 +71,18 @@ struct Window {
 		SDL_Quit();
 	}
 
-	void HookSDL(uint evtType, void delegate(SDL_Event*) hook){
+	static void HookSDL(SDL_EventType evtType, void delegate(SDL_Event*) hook){
 		eventHooks[evtType] = hook;
 	}
 
-	void HookFrameBegin(void delegate() hook){
+	static void HookFrameBegin(void delegate() hook){
 		frameBeginHooks ~= hook;
 	}
-	void HookFrameEnd(void delegate() hook){
+	static void HookFrameEnd(void delegate() hook){
 		frameEndHooks ~= hook;
 	}
 
-	void FrameBegin(){
+	static void FrameBegin(){
 		if(!isOpen) return;
 
 		// Event processing
@@ -108,8 +108,7 @@ struct Window {
 			h();
 		}
 	}
-
-	void FrameEnd(){
+	static void FrameEnd(){
 		if(!isOpen) return;
 
 		foreach(h; frameEndHooks){
@@ -117,22 +116,29 @@ struct Window {
 		}
 	}
 
-	void Swap(){
+	static void Swap(){
 		SDL_GL_SwapWindow(sdlWindow);
 	}
 
-	void Close(){
+	static void Close(){
 		isOpen = false;
 
 		if(sdlWindow) SDL_DestroyWindow(sdlWindow);
 		sdlWindow = null;
 	}
 
-	bool IsOpen(){
+	static bool IsOpen(){
 		return isOpen;
 	}
 
-	SDL_Window* GetSDLWindow(){
+	static int GetWidth(){
+		return width;
+	}
+	static int GetHeight(){
+		return height;
+	}
+
+	static SDL_Window* GetSDLWindow(){
 		return sdlWindow;
 	}
 }

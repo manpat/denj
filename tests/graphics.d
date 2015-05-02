@@ -10,9 +10,9 @@ import denj.graphics.common;
 import denj.graphics.errorchecking;
 
 void GraphicsTests(){
-	auto win = Window(800, 600, "Shader");
-	auto inp = Input(win);
-	auto rend = Renderer(win, GLContextSettings(3, 2, true));
+	Window.Init(800, 600, "Shader");
+	Input.Init();
+	Renderer.Init(GLContextSettings(3, 2, true));
 
 	auto sh = ShaderProgram.LoadFromFile("shader.shader");
 	cgl!glUseProgram(sh.glprogram);
@@ -82,8 +82,8 @@ void GraphicsTests(){
 	cgl!glPointSize(4f);
 
 	float t = 0f;
-	while(win.IsOpen()){
-		win.FrameBegin();
+	while(Window.IsOpen()){
+		Window.FrameBegin();
 
 		t += 0.04f;
 
@@ -107,41 +107,41 @@ void GraphicsTests(){
 
 		sh.SetUniform("model", translation*rotation);
 
-		if(inp.GetKeyDown(SDLK_ESCAPE)) win.Close();
+		if(Input.GetKeyDown(SDLK_ESCAPE)) Window.Close();
 
 		cgl!glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
-		rend.SetAttribute(0, vbo);
-		rend.SetAttribute(1, cbo);
+		Renderer.SetAttribute(0, vbo);
+		Renderer.SetAttribute(1, cbo);
 
 		auto c = t*0.4;
 
 		// Outer points
-		rend.Draw(GL_POINTS);
+		Renderer.Draw(GL_POINTS);
 
 		// Bind index buffer
 		ibo.Bind();
 
 		// Outer loop
-		rend.Draw(GL_LINE_LOOP);
+		Renderer.Draw(GL_LINE_LOOP);
 
 		// Inner loop
 		sh.SetUniform("model", translation*rotation*mat4.Scale(0.93f));
 
-		rend.SetAttribute(1, vec2(c*0.3f, 1f));
-		rend.Draw(GL_LINE_LOOP);
+		Renderer.SetAttribute(1, vec2(c*0.3f, 1f));
+		Renderer.Draw(GL_LINE_LOOP);
 
 		// Inverted tetra
 		sh.SetUniform("model", translation*rotation*mat4.Scale(0.4f + sin(t)*0.1f));
 
-		rend.SetAttribute(1, cbo);
-		rend.Draw(GL_LINE_LOOP);
+		Renderer.SetAttribute(1, cbo);
+		Renderer.Draw(GL_LINE_LOOP);
 
 		// Solid tetra
 		sh.SetUniform("model", translation*rotation*mat4.Scale(0.3f + sin(t)*0.15f));
 
-		rend.SetAttribute(1, vec2(c*5f, 0.8f));
-		rend.Draw(GL_TRIANGLES);
+		Renderer.SetAttribute(1, vec2(c*5f, 0.8f));
+		Renderer.Draw(GL_TRIANGLES);
 
 		// Orbiter
 		auto orbit = mat4(
@@ -152,17 +152,17 @@ void GraphicsTests(){
 		) * mat4.Translation(vec3(0,0,-2f));
 
 		sh.SetUniform("model", orbit*rotation*mat4.Scale(0.3f + sin(t*0.5f)*0.08f));
-		rend.SetAttribute(1, vec2(c*0.1f, 0.5f));
-		rend.Draw(GL_TRIANGLES);
+		Renderer.SetAttribute(1, vec2(c*0.1f, 0.5f));
+		Renderer.Draw(GL_TRIANGLES);
 
-		rend.SetAttribute(1, vec2(c*0.1f, 1f));
-		rend.Draw(GL_LINE_LOOP);
+		Renderer.SetAttribute(1, vec2(c*0.1f, 1f));
+		Renderer.Draw(GL_LINE_LOOP);
 
 		vbo.Unbind();
 		cbo.Unbind();
 		ibo.Unbind();
 
-		win.Swap();
-		win.FrameEnd();
+		Window.Swap();
+		Window.FrameEnd();
 	}
 }

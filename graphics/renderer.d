@@ -26,21 +26,19 @@ struct GLContextSettings{
 	bool doubleBuffer = true;
 }
 
+// TODO: Make Renderer monostate
 struct Renderer {
 	enum DefaultContextSettings = GLContextSettings(3, 2);
 
-	private {
+	static private {
 		SDL_GLContext sdlGLContext;
 		uint glstate;
 
-		Window window;
 		ShaderProgram boundShader;
 		// Bound buffers
 	}
 
-	this(ref Window win, GLContextSettings glsettings = DefaultContextSettings){
-		window = win;
-
+	static void Init(GLContextSettings glsettings = DefaultContextSettings){
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, glsettings.major);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, glsettings.minor);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, glsettings.doubleBuffer?1:0);
@@ -49,7 +47,7 @@ struct Renderer {
 			glsettings.debugContext?SDL_GL_CONTEXT_DEBUG_FLAG:0);
 
 		scope(failure) SDL_GL_DeleteContext(sdlGLContext);
-		sdlGLContext = SDL_GL_CreateContext(window.GetSDLWindow());
+		sdlGLContext = SDL_GL_CreateContext(Window.GetSDLWindow());
 
 		if(!sdlGLContext) "GL context creation failed".Except;
 
@@ -59,19 +57,22 @@ struct Renderer {
 			hasInited = true;
 		}
 
-		cgl!glGenVertexArrays(1, &glstate);
-		cgl!glBindVertexArray(glstate);
+		// TODO: replace with extension test
+		if(glsettings.major >= 3){
+			cgl!glGenVertexArrays(1, &glstate);
+			cgl!glBindVertexArray(glstate);
 
-		InitGLDebugging();
+			InitGLDebugging();
+		}
 	}
 
-	~this(){
+	static ~this(){
 		if(sdlGLContext) SDL_GL_DeleteContext(sdlGLContext);
 	}
 
 	// Binds values/buffers to attributes
 	// Handles the enabling/disabling of vertex attrib arrays
-	void SetAttribute(T)(int attr, T valorbuf){
+	static void SetAttribute(T)(int attr, T valorbuf){
 		// TODO: Check if attr exists in bound shader
 		static if(isBuffer!T){
 			// TODO: Add code path for glVertexAttribIPointer for integer types
@@ -101,7 +102,7 @@ struct Renderer {
 	}
 
 	// Calls glDraw(Arrays|Elements)[Instanced] based on bound buffers
-	void Draw(uint drawMode){
+	static void Draw(uint drawMode){
 		// TODO: Draw instanced
 		if(IsBufferBound(BufferType.Index)){
 			auto ibo = GetBoundBuffer(BufferType.Index);
@@ -116,10 +117,10 @@ struct Renderer {
 
 	// These are called by SetAttribute and probably shouldn't be
 	//	called manually
-	void EnableAttributeArray(uint attr){
+	static void EnableAttributeArray(uint attr){
 		cgl!glEnableVertexAttribArray(attr);
 	}
-	void DisableAttributeArray(uint attr){
+	static void DisableAttributeArray(uint attr){
 		cgl!glDisableVertexAttribArray(attr);
 	}
 }
