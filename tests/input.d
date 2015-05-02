@@ -15,7 +15,10 @@ void InputTests(){
 	while(Window.IsValid()){
 		window.FrameBegin();
 		window.Update();
-		if(input.GetKeyDown(SDLK_ESCAPE)) window.Close();
+		if(input.GetKeyDown(SDLK_ESCAPE)) {
+			window.Close();
+			break;
+		}
 
 		if(input.GetKeyDown(SDLK_a)){
 			glClearColor(1,1,0,1);
@@ -32,4 +35,6 @@ void InputTests(){
 		renderer.Swap();
 		SDL_Delay(50);
 	}
+
+	// destroy(window);
 }

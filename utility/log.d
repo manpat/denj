@@ -6,33 +6,39 @@ import std.file;
 import std.string;
 
 private {
-	string logFile = "denj.log"; // Change to file handle maybe
-	bool fileLoggingEnabled = true;
+	__gshared File logFile;
+	__gshared bool fileLoggingEnabled = true;
 }
 
-void SetLogFile(string _logFile){
-	logFile = _logFile;
+static this(){
+	logFile.open("denj.log", "w");
 }
 
-string GetLogFile(){
-	return logFile;
+static ~this(){
+	FlushLog();
+	logFile.close();
 }
 
-void ClearLog(){
-	std.file.write(logFile, "");
+void SetLogFile(string logFileName){
+	logFile.close();
+	logFile.open(logFileName, "w");
+}
+
+string GetLogFileName(){
+	return logFile.name;
 }
 
 void Log()(){
-	writeln("");
-	if(fileLoggingEnabled) std.file.append(logFile, "\n");
+	writeln();
+	if(fileLoggingEnabled) logFile.writeln();
 }
 void Log(T...) (T t){
 	writeln(t);
-	if(fileLoggingEnabled) std.file.append(logFile, TupleToString(t) ~ "\n");
+	if(fileLoggingEnabled) logFile.writeln(t);
 }
 void LogF(Fmt, T...) (Fmt fmt, T t){
 	writefln(fmt, t);
-	if(fileLoggingEnabled) std.file.append(logFile, fmt.format(t) ~ "\n");
+	if(fileLoggingEnabled) logFile.writefln(fmt, t);
 }
 
 void EnableFileLogging(bool _fileLog = true){
@@ -45,5 +51,5 @@ bool FileLoggingEnabled(){
 
 void FlushLog(){
 	std.stdio.stdout.flush();
-	// Flush log file
+	logFile.flush();
 }

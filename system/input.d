@@ -10,7 +10,7 @@ enum KeyState {
 	Down
 }
 
-class Input {
+struct Input {
 	KeyState[uint] keys;
 	uint[] changedKeys;
 

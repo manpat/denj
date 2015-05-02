@@ -12,12 +12,10 @@ import tests.graphics;
 // version = TestMath;
 // version = TestWindow;
 version = TestInput;
-// version = TestGraphics;
+version = TestGraphics;
 // version = RunScratch;
 
 void main(){
-	ClearLog();
-
 	version(TestLog) RunTest!LogTests();
 	version(TestMath) RunTest!MathTests();
 	version(TestWindow) RunTest!WindowTests();
@@ -26,7 +24,6 @@ void main(){
 	version(RunScratch) RunTest!Scratch();
 
 	Log("Finished");
-	FlushLog();
 }
 
 void RunTest(alias test)(){

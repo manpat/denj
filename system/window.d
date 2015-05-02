@@ -12,7 +12,6 @@ import derelict.util.exception;
 
 private {
 	__gshared Window[uint] windows;
-	__gshared bool hasInited = false;
 }
 
 class Window {
@@ -33,19 +32,6 @@ class Window {
 	}
 
 	this(int _width, int _height, string title){
-		if(!hasInited){
-			DerelictSDL2.missingSymbolCallback = (string) => ShouldThrow.No;
-			DerelictSDL2.load();
-
-			scope(failure) SDL_Quit();
-			if(SDL_Init(SDL_INIT_EVERYTHING) < 0){
-				"SDL init failed".Except;
-			}
-
-			isMaster = true;
-			windows[0] = this;
-		}
-
 		width = _width;
 		height = _height;
 
@@ -63,23 +49,29 @@ class Window {
 			"Window creation failed".Except;
 		}
 
-		hasInited = true;
+		if(!IsValid()){
+			isMaster = true;
+			windows[0] = this;
+		}
+
 		isOpen = true;
 		id = SDL_GetWindowID(sdlWindow);
 		windows[id] = this;
 	}
 
-	~this(){
-		if(sdlWindow) SDL_DestroyWindow(sdlWindow);
-		if(isMaster) {
-			foreach(w; windows){
-				w.Close();
-			}
+	static this(){
+		Log("static this");
+		DerelictSDL2.missingSymbolCallback = (string) => ShouldThrow.No;
+		DerelictSDL2.load();
 
-			SDL_Quit();
-			windows[0] = null;
-			hasInited = false;
+		scope(failure) SDL_Quit();
+		if(SDL_Init(SDL_INIT_EVERYTHING) < 0){
+			"SDL init failed".Except;
 		}
+	}
+	static ~this(){
+		Log("static ~this");
+		SDL_Quit();
 	}
 
 	static Window GetMain(){
@@ -147,15 +139,7 @@ class Window {
 
 	void Update(){
 		if(!sdlWindow) return;
-
-		if(!isOpen){
-			windows.remove(id);
-			if(sdlWindow) SDL_DestroyWindow(sdlWindow);
-
-			sdlWindow = null;
-
-			return;
-		}
+		if(!isOpen) return;
 
 		if(isMaster){
 			SDL_Event e;
@@ -228,6 +212,21 @@ class Window {
 
 	void Close(){
 		isOpen = false;
+
+		windows.remove(id);
+		if(sdlWindow) SDL_DestroyWindow(sdlWindow);
+		sdlWindow = null;
+
+		if(isMaster) {
+			Log("Master close");
+			windows.remove(0);
+
+			foreach(w; windows.values){
+				w.Close();
+			}
+
+			isMaster = false;
+		}
 	}
 
 	void MakeMain(){
