@@ -121,17 +121,17 @@ struct Input {
 		return keys.get(key, KeyState.None) == (KeyState.Up|KeyState.ThisFrame);
 	}
 
-	// Checks if a given button is pressed
+	// Checks if a given mouse button is pressed
 	static bool GetButton(uint button){
 		return (buttons.get(button, ButtonState.None) & ButtonState.Down) != 0;
 	}
 
-	// Checks if a given button has been pressed this frame
+	// Checks if a given mouse button has been pressed this frame
 	static bool GetButtonDown(uint button){
 		return buttons.get(button, ButtonState.None) == (ButtonState.Down|ButtonState.ThisFrame);
 	}
 
-	// Checks if a given button has been released this frame
+	// Checks if a given mouse button has been released this frame
 	static bool GetButtonUp(uint button){
 		return buttons.get(button, ButtonState.None) == (ButtonState.Up|ButtonState.ThisFrame);
 	}

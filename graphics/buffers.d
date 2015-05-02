@@ -147,10 +147,10 @@ class Buffer {
 		}
 	}
 
-	T* Map(T)(){
+	T[] Map(T)(){
 		// This mapping is super naïve
-		return cast(T*) cgl!glMapBufferRange(type, 0, count*elementsize,
-			GL_MAP_READ_BIT|GL_MAP_WRITE_BIT);
+		return (cast(T*) cgl!glMapBufferRange(type, 0, count*elementsize,
+					GL_MAP_READ_BIT|GL_MAP_WRITE_BIT))[0..count];
 	}
 
 	void Unmap(){
