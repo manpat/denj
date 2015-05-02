@@ -10,7 +10,20 @@ import denj.utility;
 
 import derelict.util.exception;
 
-class Window {
+//// Hook call order ////
+//
+//	[Window.FrameBegin]
+//		[Event processing]
+//		SDLHooks
+//		FrameBegin
+// 
+//	[...]
+//
+//	[Window.FrameEnd]
+//		FrameEnd
+//
+
+struct Window {
 	enum AllEvents = SDL_LASTEVENT + 1;
 
 	private {
@@ -21,7 +34,7 @@ class Window {
 
 		void delegate(SDL_Event*) [uint] eventHooks;
 		void delegate() [] frameBeginHooks;
-		void delegate() [] updateHooks;
+		void delegate() [] frameEndHooks;
 	}
 
 	this(int _width, int _height, string title){
@@ -62,26 +75,17 @@ class Window {
 		eventHooks[evtType] = hook;
 	}
 
-	void HookUpdate(void delegate() hook){
-		updateHooks ~= hook;
-	}
-
 	void HookFrameBegin(void delegate() hook){
 		frameBeginHooks ~= hook;
 	}
-
-	// TODO: Event polling in FrameBegin
-	// TODO: FrameEnd for pre-event stuff
-
-	void FrameBegin(){
-		foreach(h; frameBeginHooks){
-			h();
-		}
+	void HookFrameEnd(void delegate() hook){
+		frameEndHooks ~= hook;
 	}
 
-	void Update(){
+	void FrameBegin(){
 		if(!isOpen) return;
 
+		// Event processing
 		SDL_Event e;
 		auto ghook = AllEvents in eventHooks;
 
@@ -92,15 +96,29 @@ class Window {
 				return;
 			}
 
+			// SDL hooks
 			if(ghook) (*ghook)(&e);
 
 			auto hook = e.type in eventHooks;
 			if(hook) (*hook)(&e);
 		}
-
-		foreach(h; updateHooks){
+		
+		// Hook dispatch
+		foreach(h; frameBeginHooks){
 			h();
 		}
+	}
+
+	void FrameEnd(){
+		if(!isOpen) return;
+
+		foreach(h; frameEndHooks){
+			h();
+		}
+	}
+
+	void Swap(){
+		SDL_GL_SwapWindow(sdlWindow);
 	}
 
 	void Close(){

@@ -16,7 +16,6 @@ import std.traits;
 
 private {
 	__gshared bool hasInited = false;
-	__gshared Renderer thisIsHackyAndShouldBeRemovedASAP = null;
 }
 
 struct GLContextSettings{
@@ -27,7 +26,7 @@ struct GLContextSettings{
 	bool doubleBuffer = true;
 }
 
-class Renderer {
+struct Renderer {
 	enum DefaultContextSettings = GLContextSettings(3, 2);
 
 	private {
@@ -39,8 +38,7 @@ class Renderer {
 		// Bound buffers
 	}
 
-	this(Window win, GLContextSettings glsettings = DefaultContextSettings){
-		thisIsHackyAndShouldBeRemovedASAP = this;
+	this(ref Window win, GLContextSettings glsettings = DefaultContextSettings){
 		window = win;
 
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, glsettings.major);
@@ -64,7 +62,6 @@ class Renderer {
 		cgl!glGenVertexArrays(1, &glstate);
 		cgl!glBindVertexArray(glstate);
 
-		MakeCurrent();
 		InitGLDebugging();
 	}
 
@@ -72,17 +69,10 @@ class Renderer {
 		if(sdlGLContext) SDL_GL_DeleteContext(sdlGLContext);
 	}
 
-	void MakeCurrent(){
-		SDL_GL_MakeCurrent(window.GetSDLWindow(), sdlGLContext);
-	}
-
-	void Swap(){
-		SDL_GL_SwapWindow(window.GetSDLWindow());
-	}
-
 	// Binds values/buffers to attributes
 	// Handles the enabling/disabling of vertex attrib arrays
 	void SetAttribute(T)(int attr, T valorbuf){
+		// TODO: Check if attr exists in bound shader
 		static if(isBuffer!T){
 			// TODO: Add code path for glVertexAttribIPointer for integer types
 			// TODO: Add optional stride if buffer base type is struct
@@ -112,6 +102,7 @@ class Renderer {
 
 	// Calls glDraw(Arrays|Elements)[Instanced] based on bound buffers
 	void Draw(uint drawMode){
+		// TODO: Draw instanced
 		if(IsBufferBound(BufferType.Index)){
 			auto ibo = GetBoundBuffer(BufferType.Index);
 			cgl!glDrawElements(drawMode, cast(int) ibo.length, ibo.glBaseType, null);
@@ -123,6 +114,8 @@ class Renderer {
 
 	// TODO: Draw range
 
+	// These are called by SetAttribute and probably shouldn't be
+	//	called manually
 	void EnableAttributeArray(uint attr){
 		cgl!glEnableVertexAttribArray(attr);
 	}

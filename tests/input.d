@@ -8,13 +8,12 @@ import denj.graphics.common;
 import denj.graphics.renderer;
 
 void InputTests(){
-	auto window = new Window(200, 200, "InputTest");
-	auto renderer = new Renderer(window);
-	auto input = new Input(window);
+	auto window = Window(200, 200, "InputTest");
+	auto renderer = Renderer(window);
+	auto input = Input(window);
 
 	while(window.IsOpen()){
 		window.FrameBegin();
-		window.Update();
 		if(input.GetKeyDown(SDLK_ESCAPE)) {
 			window.Close();
 			break;
@@ -32,7 +31,8 @@ void InputTests(){
 
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		renderer.Swap();
+		window.Swap();
+		window.FrameEnd();
 		SDL_Delay(50);
 	}
 }

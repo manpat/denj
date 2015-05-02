@@ -10,9 +10,9 @@ import denj.graphics.common;
 import denj.graphics.errorchecking;
 
 void GraphicsTests(){
-	auto win = new Window(800, 600, "Shader");
-	auto inp = new Input(win);
-	auto rend = new Renderer(win, GLContextSettings(3, 2, true));
+	auto win = Window(800, 600, "Shader");
+	auto inp = Input(win);
+	auto rend = Renderer(win, GLContextSettings(3, 2, true));
 
 	auto sh = ShaderProgram.LoadFromFile("shader.shader");
 	cgl!glUseProgram(sh.glprogram);
@@ -84,7 +84,6 @@ void GraphicsTests(){
 	float t = 0f;
 	while(win.IsOpen()){
 		win.FrameBegin();
-		win.Update();
 
 		t += 0.04f;
 
@@ -163,6 +162,7 @@ void GraphicsTests(){
 		cbo.Unbind();
 		ibo.Unbind();
 
-		rend.Swap();
+		win.Swap();
+		win.FrameEnd();
 	}
 }

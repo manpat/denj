@@ -14,17 +14,10 @@ struct Input {
 	KeyState[uint] keys;
 	uint[] changedKeys;
 
-	this(Window win = null){
-		if(!win)
-			"No window passed to input constructor (Temp)".Except;
-			// win = Window.GetMain();
-
-		if(!win) 
-			"Input system requires at least one active window".Except;
-
+	this(ref Window win){
 		win.HookSDL(SDL_KEYDOWN, &HandleSDL);
 		win.HookSDL(SDL_KEYUP, &HandleSDL);
-		win.HookFrameBegin(&Update);
+		win.HookFrameEnd(&FrameEnd);
 	}
 
 	private void HandleSDL(SDL_Event* e){
@@ -44,13 +37,13 @@ struct Input {
 		}
 	}
 
-	void Update(){
-		changedKeys = [];
-	}
-
-	void HandleKeypress(uint key, KeyState state){
+	private void HandleKeypress(uint key, KeyState state){
 		keys[key] = state;
 		changedKeys ~= key;
+	}
+
+	private void FrameEnd(){
+		changedKeys = [];
 	}
 
 	// Checks if a given key is pressed
