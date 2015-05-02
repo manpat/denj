@@ -3,6 +3,7 @@ module denj.system.input;
 import denj.system.common;
 import denj.system.window;
 import denj.utility;
+import denj.math.vector;
 
 enum KeyState {
 	None,
@@ -20,6 +21,7 @@ struct Input {
 	static private{
 		KeyState[uint] keys;
 		ButtonState[uint] buttons;
+		vec2 mpos;
 		// current mouse position
 		// mouse delta
 
@@ -88,10 +90,9 @@ struct Input {
 		changedButtons ~= button;
 	}
 
-	static int mx;
 	static private void HandleMouseMove(int x, int y, uint bstate){
-		mx = x;
-		Log("Move ", x, " ", y, " ", bstate);
+		mpos.x = x / cast(float) Window.GetWidth()  * 2f - 1f;
+		mpos.y =-y / cast(float) Window.GetHeight() * 2f + 1f;
 	}
 
 	static private void FrameEnd(){
@@ -145,6 +146,9 @@ struct Input {
 		return false;
 	}
 
-	// TODO: GetMousePosition
+	static vec2 GetMousePosition(){
+		return mpos;
+	}
+
 	// TODO: GetMouseMovement
 }

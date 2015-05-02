@@ -36,8 +36,8 @@ void InputTests(){
 		}else if(Input.GetButton(SDL_BUTTON_RIGHT)){
 			glClearColor(1,0,0,1);
 		}else{
-			auto g = Input.mx / cast(float) Window.GetWidth();
-			glClearColor(g,g,g,1);
+			auto mp = Input.GetMousePosition()/2f+0.5f;
+			glClearColor(mp.x,mp.y,1,1);
 		}
 
 		glClear(GL_COLOR_BUFFER_BIT);
