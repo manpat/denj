@@ -1,18 +1,18 @@
 module denj.graphics.renderer;
 
+pragma(lib, "DerelictGL3");
+
 import denj.graphics.common;
 import denj.graphics.errorchecking;
 import denj.graphics.shaders;
 import denj.graphics.buffers;
 
 import denj.math;
+import denj.system.common;
 import denj.system.window;
-import denj.utility.general;
-import denj.utility.log;
+import denj.utility;
 
 import std.traits;
-
-import derelict.sdl2.sdl;
 
 private {
 	__gshared bool hasInited = false;
@@ -120,6 +120,8 @@ class Renderer {
 			cgl!glDrawArrays(drawMode, 0, cast(int) vbo.length);
 		}
 	}
+
+	// TODO: Draw range
 
 	void EnableAttributeArray(uint attr){
 		cgl!glEnableVertexAttribArray(attr);

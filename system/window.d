@@ -1,16 +1,14 @@
 module denj.system.window;
 
 pragma(lib, "DerelictSDL2");
-pragma(lib, "DerelictGL3");
 pragma(lib, "DerelictUtil");
 pragma(lib, "dl");
 
 import std.string : toStringz;
-import derelict.sdl2.sdl;
-import derelict.opengl3.gl3;
+import denj.system.common;
+import denj.utility;
+
 import derelict.util.exception;
-import denj.utility.general;
-import denj.utility.log;
 
 private {
 	__gshared Window[uint] windows;
