@@ -10,7 +10,7 @@ import denj.graphics.common;
 import denj.graphics.errorchecking;
 
 void GraphicsTests(){
-	Window.Init(800, 600, "Shader");
+	Window.Init(800, 600, "Graphics");
 	Input.Init();
 	Renderer.Init(GLContextSettings(3, 2, true));
 
@@ -149,9 +149,9 @@ void GraphicsTests(){
 			0, 1, 0, 0,
 			-sin(-rot/12f), 0, cos(-rot/12f), 0,
 			0, 0, 0, 1,
-		) * mat4.Translation(vec3(0,0,-2f));
+		) * mat4.Translation(vec3(0,Input.GetMousePosition().y,-2f));
 
-		sh.SetUniform("model", orbit*rotation*mat4.Scale(0.3f + sin(t*0.5f)*0.08f));
+		sh.SetUniform("model", orbit*rotation*mat4.Scale(Input.GetMousePosition().x + sin(t*0.5f)*0.08f));
 		Renderer.SetAttribute(1, vec2(c*0.1f, 0.5f));
 		Renderer.Draw(GL_TRIANGLES);
 

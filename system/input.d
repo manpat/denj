@@ -8,7 +8,9 @@ import denj.math.vector;
 enum KeyState {
 	None,
 	Up,
-	Down
+	Down,
+
+	ThisFrame = 0x8
 }
 
 alias KeyState ButtonState;
@@ -23,9 +25,6 @@ struct Input {
 		ButtonState[uint] buttons;
 		vec2 mpos;
 		vec2 dmpos;
-
-		uint[] changedKeys;
-		uint[] changedButtons;
 	}
 
 	static void Init(){
@@ -80,13 +79,11 @@ struct Input {
 	}
 
 	static private void HandleKeypress(uint key, KeyState state){
-		keys[key] = state;
-		changedKeys ~= key;
+		keys[key] = state | KeyState.ThisFrame;
 	}
 
 	static private void HandleMouseButton(uint button, ButtonState state){
-		buttons[button] = state;
-		changedButtons ~= button;
+		buttons[button] = state | ButtonState.ThisFrame;
 	}
 
 	static private void HandleMouseMove(int x, int y, uint bstate){
@@ -98,61 +95,52 @@ struct Input {
 	}
 
 	static private void FrameEnd(){
-		changedKeys = [];
-		changedButtons = [];
+		foreach(ref k; keys){
+			k &= ~KeyState.ThisFrame;
+		}
+
+		foreach(ref k; buttons){
+			k &= ~ButtonState.ThisFrame;
+		}
+
 		dmpos = vec2.zero;
 	}
 
 	// Checks if a given key is pressed
 	static bool GetKey(uint key){
-		return keys.get(key, KeyState.None) == KeyState.Down;
+		return (keys.get(key, KeyState.None) & KeyState.Down) != 0;
 	}
 
 	// Checks if a given key has been pressed this frame
 	static bool GetKeyDown(uint key){
-		foreach(k; changedKeys){
-			if(k == key && keys.get(key, KeyState.None) == KeyState.Down) return true;
-		}
-
-		return false;
+		return keys.get(key, KeyState.None) == (KeyState.Down|KeyState.ThisFrame);
 	}
 
 	// Checks if a given key has been released this frame
 	static bool GetKeyUp(uint key){
-		foreach(k; changedKeys){
-			if(k == key && keys.get(key, KeyState.None) == KeyState.Up) return true;
-		}
-
-		return false;
+		return keys.get(key, KeyState.None) == (KeyState.Up|KeyState.ThisFrame);
 	}
 
 	// Checks if a given button is pressed
 	static bool GetButton(uint button){
-		return buttons.get(button, ButtonState.None) == ButtonState.Down;
+		return (buttons.get(button, ButtonState.None) & ButtonState.Down) != 0;
 	}
 
 	// Checks if a given button has been pressed this frame
 	static bool GetButtonDown(uint button){
-		foreach(k; changedButtons){
-			if(k == button && buttons.get(button, ButtonState.None) == ButtonState.Down) return true;
-		}
-
-		return false;
+		return buttons.get(button, ButtonState.None) == (ButtonState.Down|ButtonState.ThisFrame);
 	}
 
 	// Checks if a given button has been released this frame
 	static bool GetButtonUp(uint button){
-		foreach(k; changedButtons){
-			if(k == button && buttons.get(button, ButtonState.None) == ButtonState.Up) return true;
-		}
-
-		return false;
+		return buttons.get(button, ButtonState.None) == (ButtonState.Up|ButtonState.ThisFrame);
 	}
 
 	static vec2 GetMousePosition(){
 		return mpos;
 	}
 
+	// Gets change in mouse position since previous frame
 	static vec2 GetMouseDelta(){
 		return dmpos;
 	}

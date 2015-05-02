@@ -26,7 +26,6 @@ struct GLContextSettings{
 	bool doubleBuffer = true;
 }
 
-// TODO: Make Renderer monostate
 struct Renderer {
 	enum DefaultContextSettings = GLContextSettings(3, 2);
 
