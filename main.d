@@ -12,7 +12,7 @@ import tests.graphics;
 // version = TestMath;
 // version = TestWindow;
 version = TestInput;
-version = TestGraphics;
+// version = TestGraphics;
 // version = RunScratch;
 
 void main(){
@@ -31,7 +31,7 @@ void RunTest(alias test)(){
 	try{
 		test();
 	}catch(Exception e){
-		LogF("%s:%s: error: in "~test.stringof~": %s", e.file, e.line, e.msg);
+		LogF("%s:%s: error: in %s: %s", e.file, e.line, test.stringof, e.msg);
 		throw e;
 	}
 	Log(test.stringof ~ " done");

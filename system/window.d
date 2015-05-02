@@ -10,10 +10,6 @@ import denj.utility;
 
 import derelict.util.exception;
 
-private {
-	__gshared Window[uint] windows;
-}
-
 class Window {
 	enum AllEvents = SDL_LASTEVENT + 1;
 
@@ -21,10 +17,7 @@ class Window {
 		SDL_Window* sdlWindow;
 		int width, height;
 
-		uint id = 0;
-		bool isMaster = false;
 		bool isOpen = false;
-		bool windowSpecificEvents = false;
 
 		void delegate(SDL_Event*) [uint] eventHooks;
 		void delegate() [] frameBeginHooks;
@@ -49,18 +42,10 @@ class Window {
 			"Window creation failed".Except;
 		}
 
-		if(!IsValid()){
-			isMaster = true;
-			windows[0] = this;
-		}
-
 		isOpen = true;
-		id = SDL_GetWindowID(sdlWindow);
-		windows[id] = this;
 	}
 
 	static this(){
-		Log("static this");
 		DerelictSDL2.missingSymbolCallback = (string) => ShouldThrow.No;
 		DerelictSDL2.load();
 
@@ -70,59 +55,7 @@ class Window {
 		}
 	}
 	static ~this(){
-		Log("static ~this");
 		SDL_Quit();
-	}
-
-	static Window GetMain(){
-		auto main = 0 in windows;
-
-		return main?*main:null;
-	}
-
-	static Window GetWindow(uint id){
-		auto win = id in windows;
-
-		return win?*win:null;
-	}
-
-	static void UpdateAll(){
-		auto main = windows[0];
-		main.Update();
-		foreach(w; windows.values){
-			// Because the main window occurs twice in windows
-			if(w.id != main.id){
-				w.Update();
-			}
-		}
-	}
-
-	static void FrameBegin(){
-		auto main = GetMain();
-		foreach(h; main.frameBeginHooks){
-			h();
-		}
-
-		foreach(window; windows){
-			if(window.GetId() != main.GetId())
-				foreach(h; window.frameBeginHooks){
-					h();
-				}
-		}
-	}
-
-	static void HookAllSDL(uint evtType, void delegate(SDL_Event*) hook){
-		foreach(i, w; windows){
-			if(i != 0){
-				w.HookSDL(evtType, hook);
-			}
-		}
-	}
-
-	static bool IsValid(){
-		auto main = 0 in windows;
-
-		return main?main.isOpen:false;
 	}
 
 	void HookSDL(uint evtType, void delegate(SDL_Event*) hook){
@@ -137,53 +70,32 @@ class Window {
 		frameBeginHooks ~= hook;
 	}
 
+	// TODO: Event polling in FrameBegin
+	// TODO: FrameEnd for pre-event stuff
+
+	void FrameBegin(){
+		foreach(h; frameBeginHooks){
+			h();
+		}
+	}
+
 	void Update(){
-		if(!sdlWindow) return;
 		if(!isOpen) return;
 
-		if(isMaster){
-			SDL_Event e;
-			bool windowSpecific = false;
-			uint window = 0;
-			while(SDL_PollEvent(&e)){
-				switch(e.type){
-					case SDL_QUIT:
-						Close();
-						return;
-				
-					// Because some events don't
-					//	have a windowID
-					case SDL_KEYDOWN:
-					case SDL_KEYUP:
-					case SDL_MOUSEMOTION:
-					case SDL_MOUSEBUTTONDOWN:
-					case SDL_MOUSEBUTTONUP:
-					case SDL_MOUSEWHEEL:
-					case SDL_WINDOWEVENT:
-						windowSpecific = true;
-						window = e.window.windowID;
-						break;
+		SDL_Event e;
+		auto ghook = AllEvents in eventHooks;
 
-					default:
-						windowSpecific = false;
-				}
-
-				if(windowSpecificEvents && windowSpecific){
-					// Only dispatch to specific window
-					auto w = window in windows;
-					if(w){
-						w.ProcessEvent(&e);
-					}else{
-						//Log("Window not found ", window);
-						// window was probably closed 
-					}
-				}else{
-					// Dispatch to all
-					foreach(w; windows){
-						w.ProcessEvent(&e);
-					}
-				}
+		while(SDL_PollEvent(&e)){
+			if(e.type == SDL_QUIT
+			|| e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_CLOSE){
+				Close();
+				return;
 			}
+
+			if(ghook) (*ghook)(&e);
+
+			auto hook = e.type in eventHooks;
+			if(hook) (*hook)(&e);
 		}
 
 		foreach(h; updateHooks){
@@ -191,69 +103,18 @@ class Window {
 		}
 	}
 
-	protected void ProcessEvent(SDL_Event* e){
-		switch(e.type){
-			case SDL_WINDOWEVENT:
-				if(e.window.event == SDL_WINDOWEVENT_CLOSE)
-					Close();
-
-				break;
-
-			default:
-				break;
-		}
-
-		auto ghook = AllEvents in eventHooks;
-		if(ghook) (*ghook)(e);
-
-		auto hook = e.type in eventHooks;
-		if(hook) (*hook)(e);
-	}
-
 	void Close(){
 		isOpen = false;
 
-		windows.remove(id);
 		if(sdlWindow) SDL_DestroyWindow(sdlWindow);
 		sdlWindow = null;
-
-		if(isMaster) {
-			Log("Master close");
-			windows.remove(0);
-
-			foreach(w; windows.values){
-				w.Close();
-			}
-
-			isMaster = false;
-		}
-	}
-
-	void MakeMain(){
-		auto main = 0 in windows;
-		if(main) main.isMaster = false;
-
-		windows[0] = this;
-		isMaster = true;
 	}
 
 	bool IsOpen(){
 		return isOpen;
 	}
 
-	bool IsMain(){
-		return isMaster;
-	}
-
-	uint GetId(){
-		return id;
-	}
-
 	SDL_Window* GetSDLWindow(){
 		return sdlWindow;
-	}
-
-	void SetWindowSpecificEvents(bool b){
-		windowSpecificEvents = b;
 	}
 }

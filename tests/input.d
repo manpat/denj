@@ -12,7 +12,7 @@ void InputTests(){
 	auto renderer = new Renderer(window);
 	auto input = new Input(window);
 
-	while(Window.IsValid()){
+	while(window.IsOpen()){
 		window.FrameBegin();
 		window.Update();
 		if(input.GetKeyDown(SDLK_ESCAPE)) {
@@ -35,6 +35,4 @@ void InputTests(){
 		renderer.Swap();
 		SDL_Delay(50);
 	}
-
-	// destroy(window);
 }

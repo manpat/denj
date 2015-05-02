@@ -16,7 +16,8 @@ struct Input {
 
 	this(Window win = null){
 		if(!win)
-			win = Window.GetMain();
+			"No window passed to input constructor (Temp)".Except;
+			// win = Window.GetMain();
 
 		if(!win) 
 			"Input system requires at least one active window".Except;
@@ -24,8 +25,6 @@ struct Input {
 		win.HookSDL(SDL_KEYDOWN, &HandleSDL);
 		win.HookSDL(SDL_KEYUP, &HandleSDL);
 		win.HookFrameBegin(&Update);
-
-		Log("Input initialised for window with id ", win.GetId());
 	}
 
 	private void HandleSDL(SDL_Event* e){
