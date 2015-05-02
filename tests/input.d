@@ -28,6 +28,13 @@ void InputTests(){
 			glClearColor(0,1,1,1);
 		}else if(Input.GetKey(SDLK_s)){
 			glClearColor(1,0,1,1);
+
+		}else if(Input.GetButtonDown(SDL_BUTTON_LEFT)){
+			glClearColor(0,0,1,1);
+		}else if(Input.GetButtonUp(SDL_BUTTON_LEFT)){
+			glClearColor(0,1,0,1);
+		}else if(Input.GetButton(SDL_BUTTON_RIGHT)){
+			glClearColor(1,0,0,1);
 		}else{
 			auto g = Input.mx / cast(float) Window.GetWidth();
 			glClearColor(g,g,g,1);
@@ -37,6 +44,6 @@ void InputTests(){
 
 		Window.Swap();
 		Window.FrameEnd();
-		SDL_Delay(50);
+		SDL_Delay(10);
 	}
 }

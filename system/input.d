@@ -14,16 +14,17 @@ alias KeyState ButtonState;
 
 // TODO: Figure out how to handle/store gamepad input
 // TODO: Grab mouse input. Mousewarping
+// TODO: Remove changed* arrays and instead have a separate state
 
 struct Input {
 	static private{
 		KeyState[uint] keys;
-		// mouse button states
+		ButtonState[uint] buttons;
 		// current mouse position
 		// mouse delta
 
 		uint[] changedKeys;
-		// changed mouse buttons
+		uint[] changedButtons;
 	}
 
 	static void Init(){
@@ -56,14 +57,12 @@ struct Input {
 				break;
 
 			case SDL_MOUSEBUTTONDOWN:{
-				auto b = &e.button;
-				HandleMouseButton(b.button, ButtonState.Down, b.x, b.y);
+				HandleMouseButton(e.button.button, ButtonState.Down);
 				break;
 			}
 
 			case SDL_MOUSEBUTTONUP:{
-				auto b = &e.button;
-				HandleMouseButton(b.button, ButtonState.Up, b.x, b.y);
+				HandleMouseButton(e.button.button, ButtonState.Up);
 				break;
 			}
 
@@ -84,8 +83,9 @@ struct Input {
 		changedKeys ~= key;
 	}
 
-	static private void HandleMouseButton(uint button, ButtonState state, int x, int y){
-		Log("Click ", button, " ", x, " ", y);
+	static private void HandleMouseButton(uint button, ButtonState state){
+		buttons[button] = state;
+		changedButtons ~= button;
 	}
 
 	static int mx;
@@ -96,6 +96,7 @@ struct Input {
 
 	static private void FrameEnd(){
 		changedKeys = [];
+		changedButtons = [];
 	}
 
 	// Checks if a given key is pressed
@@ -121,7 +122,29 @@ struct Input {
 		return false;
 	}
 
-	// TODO: GetMouseButton[Down|Up]
+	// Checks if a given button is pressed
+	static bool GetButton(uint button){
+		return buttons.get(button, ButtonState.None) == ButtonState.Down;
+	}
+
+	// Checks if a given button has been pressed this frame
+	static bool GetButtonDown(uint button){
+		foreach(k; changedButtons){
+			if(k == button && buttons.get(button, ButtonState.None) == ButtonState.Down) return true;
+		}
+
+		return false;
+	}
+
+	// Checks if a given button has been released this frame
+	static bool GetButtonUp(uint button){
+		foreach(k; changedButtons){
+			if(k == button && buttons.get(button, ButtonState.None) == ButtonState.Up) return true;
+		}
+
+		return false;
+	}
+
 	// TODO: GetMousePosition
 	// TODO: GetMouseMovement
 }
