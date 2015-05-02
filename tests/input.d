@@ -10,7 +10,7 @@ import denj.graphics.renderer;
 import std.string;
 
 void InputTests(){
-	Window.Init(200, 200, "InputTest");
+	Window.Init(400, 400, "InputTest");
 	Renderer.Init(GLContextSettings(3, 2));
 	Input.Init();
 
@@ -37,7 +37,9 @@ void InputTests(){
 			glClearColor(1,0,0,1);
 		}else{
 			auto mp = Input.GetMousePosition()/2f+0.5f;
-			glClearColor(mp.x,mp.y,1,1);
+			auto md = Input.GetMouseDelta();
+
+			glClearColor(mp.x, mp.y*md.y, md.magnitude^^10f, 1);
 		}
 
 		glClear(GL_COLOR_BUFFER_BIT);

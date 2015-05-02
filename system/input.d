@@ -22,8 +22,7 @@ struct Input {
 		KeyState[uint] keys;
 		ButtonState[uint] buttons;
 		vec2 mpos;
-		// current mouse position
-		// mouse delta
+		vec2 dmpos;
 
 		uint[] changedKeys;
 		uint[] changedButtons;
@@ -91,13 +90,17 @@ struct Input {
 	}
 
 	static private void HandleMouseMove(int x, int y, uint bstate){
-		mpos.x = x / cast(float) Window.GetWidth()  * 2f - 1f;
-		mpos.y =-y / cast(float) Window.GetHeight() * 2f + 1f;
+		vec2 nmpos;
+		nmpos.x = x / cast(float) Window.GetWidth()  * 2f - 1f;
+		nmpos.y =-y / cast(float) Window.GetHeight() * 2f + 1f;
+		dmpos = nmpos - mpos;
+		mpos = nmpos;
 	}
 
 	static private void FrameEnd(){
 		changedKeys = [];
 		changedButtons = [];
+		dmpos = vec2.zero;
 	}
 
 	// Checks if a given key is pressed
@@ -150,5 +153,7 @@ struct Input {
 		return mpos;
 	}
 
-	// TODO: GetMouseMovement
+	static vec2 GetMouseDelta(){
+		return dmpos;
+	}
 }
