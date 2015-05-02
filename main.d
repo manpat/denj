@@ -11,8 +11,8 @@ import tests.graphics;
 // version = TestLog;
 // version = TestMath;
 // version = TestWindow;
-// version = TestInput;
-version = TestGraphics;
+version = TestInput;
+// version = TestGraphics;
 // version = RunScratch;
 
 void main(){

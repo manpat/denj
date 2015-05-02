@@ -1,6 +1,6 @@
 module denj.system.input;
 
-import derelict.sdl2.sdl;
+import denj.system.common;
 import denj.system.window;
 import denj.utility;
 
@@ -50,18 +50,17 @@ class Input {
 	}
 
 	void HandleKeypress(uint key, KeyState state){
-		Log("Keypress ", key, " ", state);
 		keys[key] = state;
 		changedKeys ~= key;
 	}
 
 	// Checks if a given key is pressed
-	public bool KeyDown(uint key){
+	public bool GetKey(uint key){
 		return keys.get(key, KeyState.None) == KeyState.Down;
 	}
 
 	// Checks if a given key has been pressed this frame
-	public bool KeyPressed(uint key){
+	public bool GetKeyDown(uint key){
 		foreach(k; changedKeys){
 			if(k == key && keys.get(key, KeyState.None) == KeyState.Down) return true;
 		}
@@ -70,7 +69,7 @@ class Input {
 	}
 
 	// Checks if a given key has been released this frame
-	public bool KeyReleased(uint key){
+	public bool GetKeyUp(uint key){
 		foreach(k; changedKeys){
 			if(k == key && keys.get(key, KeyState.None) == KeyState.Up) return true;
 		}

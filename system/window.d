@@ -25,6 +25,7 @@ class Window {
 		uint id = 0;
 		bool isMaster = false;
 		bool isOpen = false;
+		bool windowSpecificEvents = false;
 
 		void delegate(SDL_Event*) [uint] eventHooks;
 		void delegate() [] frameBeginHooks;
@@ -183,7 +184,7 @@ class Window {
 						windowSpecific = false;
 				}
 
-				if(windowSpecific){
+				if(windowSpecificEvents && windowSpecific){
 					// Only dispatch to specific window
 					auto w = window in windows;
 					if(w){
@@ -251,5 +252,9 @@ class Window {
 
 	SDL_Window* GetSDLWindow(){
 		return sdlWindow;
+	}
+
+	void SetWindowSpecificEvents(bool b){
+		windowSpecificEvents = b;
 	}
 }

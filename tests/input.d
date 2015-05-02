@@ -1,8 +1,7 @@
 module tests.input;
 
-import derelict.sdl2.sdl;
-
 import denj.utility;
+import denj.system.common;
 import denj.system.window;
 import denj.system.input;
 import denj.graphics.common;
@@ -14,14 +13,15 @@ void InputTests(){
 	auto input = new Input(window);
 
 	while(Window.IsValid()){
+		window.FrameBegin();
 		window.Update();
-		if(input.KeyPressed(SDLK_ESCAPE)) window.Close();
+		if(input.GetKeyDown(SDLK_ESCAPE)) window.Close();
 
-		if(input.KeyPressed(SDLK_a)){
+		if(input.GetKeyDown(SDLK_a)){
 			glClearColor(1,1,0,1);
-		}else if(input.KeyReleased(SDLK_a)){
+		}else if(input.GetKeyUp(SDLK_a)){
 			glClearColor(0,1,1,1);
-		}else if(input.KeyDown(SDLK_s)){
+		}else if(input.GetKey(SDLK_s)){
 			glClearColor(1,0,1,1);
 		}else{
 			glClearColor(1,1,1,1);

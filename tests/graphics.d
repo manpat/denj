@@ -108,7 +108,7 @@ void GraphicsTests(){
 
 		sh.SetUniform("model", translation*rotation);
 
-		if(inp.KeyPressed(SDLK_ESCAPE)) win.Close();
+		if(inp.GetKeyDown(SDLK_ESCAPE)) win.Close();
 
 		cgl!glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
