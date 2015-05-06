@@ -101,18 +101,23 @@ struct Renderer {
 	}
 
 	// Calls glDraw(Arrays|Elements)[Instanced] based on bound buffers
-	static void Draw(uint drawMode){
+	static void Draw(uint drawMode, uint start = 0, int count = -1){
+		if(!IsBufferBound(BufferType.Array)){
+			"Tried to draw with no attribute array bound".Except;
+		}
+
 		// TODO: Draw instanced
 		if(IsBufferBound(BufferType.Index)){
 			auto ibo = GetBoundBuffer(BufferType.Index);
-			cgl!glDrawElements(drawMode, cast(int) ibo.length, ibo.glBaseType, null);
+			if(count < 0) count = cast(int) ibo.length;
+			cgl!glDrawElements(drawMode, count, ibo.glBaseType, cast(void*) (start*ibo.elementsize));
+
 		}else{
 			auto vbo = GetBoundBuffer(BufferType.Array);
-			cgl!glDrawArrays(drawMode, 0, cast(int) vbo.length);
+			if(count < 0) count = cast(int) vbo.length;
+			cgl!glDrawArrays(drawMode, start, count);
 		}
 	}
-
-	// TODO: Draw range
 
 	// These are called by SetAttribute and probably shouldn't be
 	//	called manually

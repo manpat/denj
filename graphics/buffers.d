@@ -29,12 +29,7 @@ enum BufferUsage {
 }
 
 template isBuffer(T){
-	// static if(is(T == Buffer!sT, sT)){
-	static if(is(T == Buffer)){
-		enum isBuffer = true;
-	}else{
-		enum isBuffer = false;
-	}
+	enum isBuffer = is(T == Buffer);
 }
 
 bool IsBufferBound(BufferType t){
@@ -46,7 +41,7 @@ Buffer GetBoundBuffer(BufferType t){
 }
 
 class Buffer {
-	private {
+	public { // TODO: Make private
 		GLuint glbuffer;
 		BufferType type;
 		BufferUsage usage;

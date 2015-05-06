@@ -139,6 +139,10 @@ class ShaderProgram {
 			mixin("cgl!glUniform"~mangle~"(pos, val);");
 		}		
 	}
+
+	void Use(){
+		cgl!glUseProgram(glprogram);
+	}
 }
 
 /////////////////////////////////////////////////////////

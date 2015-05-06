@@ -46,10 +46,9 @@ void GraphicsTests(){
 	{
 		cbo.Bind();
 		cbo.AllocateStorage!vec2(data.length);
-		auto cbuff = cbo.Map!vec2();
 
 		float h = 0f;
-		foreach(ref c; cbuff){
+		foreach(ref c; cbo.Map!vec2()){
 			c = vec2(h,1f);
 			h += 0.25f;
 		}
