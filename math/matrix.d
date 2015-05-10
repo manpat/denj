@@ -2,15 +2,16 @@ module denj.math.matrix;
 
 import std.math;
 import std.algorithm : min, max;
+import denj.utility.general;
 import denj.math.vector;
 
 // Column major
 
 // format                        
-//     xx xy xz 0
-//     yx yy yz 0
-//     zx zy zz 0
-//     tx ty tz 1
+//     xx yx zx tx
+//     xy yy zy ty
+//     xz yz zz tz
+//     0  0  0  1
 
 template isMat(T){
 	enum isMat = is(T == Matrix!(C, R, sT), int C, int R, sT);
@@ -18,6 +19,7 @@ template isMat(T){
 
 struct Matrix(int _Columns, int _Rows, T = float) {
 	alias Matrix!(_Columns, _Rows, T) thisType;
+	alias Matrix!(_Rows, _Columns, T) multipliableType;
 	enum Columns = _Columns;
 	enum Rows = _Rows;
 	alias BaseType = T;
@@ -29,14 +31,14 @@ struct Matrix(int _Columns, int _Rows, T = float) {
 			static assert(x < Columns);
 			static assert(y < Rows);
 
-			return data[x + y * Rows];
+			return data[x + y * Columns];
 		}
 
 		ref T get(int x, int y) {
-			return data[x + y * Rows];
+			return data[x + y * Columns];
 		}
 		T get(int x, int y) const {
-			return data[x + y * Rows];
+			return data[x + y * Columns];
 		}
 	}
 
@@ -47,6 +49,7 @@ struct Matrix(int _Columns, int _Rows, T = float) {
 		data[] = _data[];
 	}
 
+	// Available for every dimension
 	static thisType Scale(T s){
 		thisType ret = thisType.identity;
 		foreach(i; 0..min(min(Columns, Rows), 3)){
@@ -56,14 +59,73 @@ struct Matrix(int _Columns, int _Rows, T = float) {
 		return ret;
 	}
 
+	// Requires a fourth column and at least three rows
 	static if(Columns == 4 && Rows >= 3)
-	static thisType Translation(vec3 t) {
+	static auto Translation(vec3 t) {
 		thisType ret = thisType.identity;
 		ret[Columns-1, 0] = t.data[0];
 		ret[Columns-1, 1] = t.data[1];
 		ret[Columns-1, 2] = t.data[2];
 
 		return ret;
+	}
+
+	static if(Columns >= 3 && Rows == 4)
+	auto Translate(vec3 t) {
+		return multipliableType.Translation(t) * this;
+	}
+
+
+	// Requires at least 2x2
+	//	Rotations in lower dimensions don't make sense
+	static if(Columns >= 2 && Rows >= 2){
+		static auto ZRotation(float ang){
+			auto ret = thisType.identity;
+			float ca = cos(ang);
+			float sa = sin(ang);
+			ret[0, 0] = ca;
+			ret[1, 1] = ca;
+			ret[0, 1] = sa;
+			ret[1, 0] = -sa;
+			return ret;
+		}
+		
+		auto RotateZ(float ang){
+			return multipliableType.ZRotation(ang) * this;
+		}
+	}
+
+	// Requires three dimensions
+	static if(Columns >= 3 && Rows >= 3){
+		static auto YRotation(float ang){
+			auto ret = thisType.identity;
+			float ca = cos(ang);
+			float sa = sin(ang);
+			ret[0, 0] = ca;
+			ret[2, 2] = ca;
+			ret[0, 2] = -sa;
+			ret[2, 0] = sa;
+			return ret;
+		}
+
+		auto RotateY(float ang){
+			return multipliableType.YRotation(ang) * this;
+		}
+
+		static auto XRotation(float ang){
+			auto ret = thisType.identity;
+			float ca = cos(ang);
+			float sa = sin(ang);
+			ret[1, 1] = ca;
+			ret[2, 2] = ca;
+			ret[1, 2] = sa;
+			ret[2, 1] = -sa;
+			return ret;
+		}
+
+		auto RotateX(float ang){
+			return multipliableType.XRotation(ang) * this;
+		}
 	}
 
 	ref T opIndex(size_t x, size_t y){
@@ -92,7 +154,7 @@ struct Matrix(int _Columns, int _Rows, T = float) {
 
 	auto opBinary(string op, int RHSColumns, int RHSRows, RHST)(auto ref Matrix!(RHSColumns, RHSRows, RHST) rhs) const{
 		alias typeof(T() * RHST()) ElType;
-		alias Matrix!(RHSColumns, Rows, typeof(data[0]*rhs.data[0])) RetType;
+		alias Matrix!(RHSColumns, Rows, ElType) RetType;
 
 		static if(op == "*"){
 			static assert(Columns == RHSRows, "Matrices not able to be multiplied");
@@ -118,9 +180,9 @@ struct Matrix(int _Columns, int _Rows, T = float) {
 	string toString() const {
 		import std.string : format;
 
-		string s = format("[%(%s, %)", data[0..Rows]);
+		string s = format("[%(%s, %)", data[0..Columns]);
 		foreach(y; 1..Rows){
-			s ~= format(",\n %(%s, %)", data[y*Rows .. (y+1)*Rows]);
+			s ~= format(",\n %(%s, %)", data[y*Columns .. (y+1)*Columns]);
 		}
 
 		return s ~ "]";
@@ -136,6 +198,9 @@ struct Matrix(int _Columns, int _Rows, T = float) {
 		}else static if(Columns == 4){
 			enum thisType identity = thisType(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
 		}
+	}else static if(Columns >= 3 && Rows >= 3){
+		enum thisType identity = thisType(
+			TupleRepeat!(max(Rows, Columns)-1, 1, TupleRepeat!(Columns, 0))[0..Columns*Rows]);
 	}
 }
 

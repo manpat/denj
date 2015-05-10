@@ -4,19 +4,19 @@ Graphics
 Shader
 ------
 	Shader parsing
-		Multiple shader units per shader file
-		#type
+		Multiple shader units per shader file √
+		#type √
 		#include
 
 	Set shader version
-	Load shader from file
-	Load shader from string
-	Attribute setting
-	Uniform setting
+	Load shader from file √
+	Load shader from string √
+	Attribute setting [moved to renderer]
+	Uniform setting √
 
 Buffer
 ------
-	Should handle multiple buffer types
+	Should handle multiple buffer types √
 	Persistent mapping?
 		Fencing
 
@@ -32,11 +32,11 @@ Renderer
 	Stencil stuff
 
 	Buffer binding
-		Vertex Attributes
-		Element/Index Arrays
+		Vertex Attributes √
+		Element/Index Arrays √
 		Divisor/Instancing
 
-	Draw calls
+	Draw calls ~
 
 	Queries
 		Primitives drawn

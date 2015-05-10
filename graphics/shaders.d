@@ -123,12 +123,17 @@ class ShaderProgram {
 
 	void SetUniform(T)(string s, T val){
 		int pos = uniformLocations.get(s, -1);
-		if(pos < 0) Log("Tried to set non existent uniform '", s, "'");
+		if(pos < 0) {
+			Log("Tried to set non existent uniform '", s, "'");
+			return;
+		}
 
 		SetUniform(pos, val);
 	}
 
 	void SetUniform(T)(int pos, T val){
+		if(pos < 0) return;
+
 		enum mangle = GetGLMangle!T;
 
 		static if(isVec!T){
