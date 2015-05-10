@@ -25,6 +25,8 @@ struct Input {
 		ButtonState[uint] buttons;
 		vec2 mpos;
 		vec2 dmpos;
+
+		bool mouseCapture = false;
 	}
 
 	static void Init(){
@@ -41,6 +43,7 @@ struct Input {
 		// Window.HookSDL(SDL_CONTROLLERBUTTONUP, &HandleSDL);
 		// Window.HookSDL(SDL_CONTROLLERAXISMOTION, &HandleSDL);
 
+		Window.HookFrameBegin(() => FrameBegin);
 		Window.HookFrameEnd(() => FrameEnd);
 	}
 
@@ -66,11 +69,12 @@ struct Input {
 				break;
 			}
 
-			case SDL_MOUSEMOTION:{
-				auto m = &e.motion;
-				HandleMouseMove(m.x, m.y, m.state);
+			case SDL_MOUSEMOTION:
+				if(!mouseCapture){
+					auto m = &e.motion;
+					HandleMouseMove(m.x, m.y);
+				}
 				break;
-			}
 
 			default:
 				LogF("Unhandled SDLEvent in Input 0x%x", e.type);
@@ -86,14 +90,32 @@ struct Input {
 		buttons[button] = state | ButtonState.ThisFrame;
 	}
 
-	static private void HandleMouseMove(int x, int y, uint bstate){
+	static private void HandleMouseMove(int x, int y){
+		auto wsize = vec2(
+			cast(float) Window.GetWidth(),
+			cast(float) Window.GetHeight());
+
 		vec2 nmpos;
-		nmpos.x = x / cast(float) Window.GetWidth()  * 2f - 1f;
-		nmpos.y =-y / cast(float) Window.GetHeight() * 2f + 1f;
-		dmpos = nmpos - mpos;
-		mpos = nmpos;
+		nmpos.x = x / wsize.x * 2f - 1f;
+		nmpos.y =-y / wsize.y * 2f + 1f;
+
+		if(mouseCapture){
+			dmpos = nmpos;
+			mpos = mpos + nmpos;
+		}else{
+			dmpos = nmpos - mpos;
+			mpos = nmpos;
+		}
 	}
 
+	static private void FrameBegin(){
+		if(mouseCapture){
+			int mx, my;
+			SDL_GetMouseState(&mx, &my);
+			HandleMouseMove(mx, my);
+			SDL_WarpMouseInWindow(Window.GetSDLWindow(), Window.GetWidth()/2, Window.GetHeight()/2);
+		}
+	}
 	static private void FrameEnd(){
 		foreach(ref k; keys){
 			k &= ~KeyState.ThisFrame;
@@ -143,5 +165,12 @@ struct Input {
 	// Gets change in mouse position since previous frame
 	static vec2 GetMouseDelta(){
 		return dmpos;
+	}
+
+	////////////////////// Settings /////////////////////
+
+	static void SetMouseCapture(bool capture = false){
+		mouseCapture = capture;
+		// show/hide cursor
 	}
 }

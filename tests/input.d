@@ -14,6 +14,8 @@ void InputTests(){
 	Renderer.Init(GLContextSettings(3, 2));
 	Input.Init();
 
+	bool capture = false;
+
 	while(Window.IsOpen()){
 		Window.FrameBegin();
 
@@ -28,6 +30,10 @@ void InputTests(){
 			glClearColor(0,1,1,1);
 		}else if(Input.GetKey(SDLK_s)){
 			glClearColor(1,0,1,1);
+
+		}else if(Input.GetKey(SDLK_c)){
+			capture ^= true;
+			Input.SetMouseCapture(capture);
 
 		}else if(Input.GetButtonDown(SDL_BUTTON_LEFT)){
 			glClearColor(0,0,1,1);
