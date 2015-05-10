@@ -23,8 +23,8 @@ struct Input {
 	static private{
 		KeyState[uint] keys;
 		ButtonState[uint] buttons;
-		vec2 mpos;
-		vec2 dmpos;
+		vec2 mpos = vec2.zero;
+		vec2 dmpos = vec2.zero;
 
 		bool mouseCapture = false;
 	}

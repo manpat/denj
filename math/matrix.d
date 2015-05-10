@@ -177,6 +177,30 @@ struct Matrix(int _Columns, int _Rows, T = float) {
 		}
 	}
 
+	auto opBinary(string op, int RHSDim, RHST)(auto ref Vector!(RHSDim, RHST) rhs) const{
+		alias typeof(T() * RHST()) ElType;
+		alias typeof(rhs) RetType;
+
+		static if(op == "*"){
+			static assert(Columns == RHSDim, "Matrix and vector not able to be multiplied");
+			RetType ret;
+
+			foreach(i; 0..Rows){
+				ElType sum = 0;
+
+				foreach(k; 0..RHSDim){
+					sum += get(k, i) * rhs.data[k];
+				}
+				
+				ret.data[i] = sum; 
+			}
+
+			return ret;
+		}else{
+			static assert(0, "matrix-vector "~op~" operation not implemented");
+		}
+	}
+
 	string toString() const {
 		import std.string : format;
 
