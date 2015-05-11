@@ -171,6 +171,6 @@ struct Input {
 
 	static void SetMouseCapture(bool capture = false){
 		mouseCapture = capture;
-		// show/hide cursor
+		SDL_ShowCursor(!capture);
 	}
 }
