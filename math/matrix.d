@@ -13,13 +13,16 @@ import denj.math.vector;
 //     xz yz zz tz
 //     0  0  0  1
 
+// http://www.gamedev.net/topic/425118-inverse--matrix/
+
 template isMat(T){
 	enum isMat = is(T == Matrix!(C, R, sT), int C, int R, sT);
 }
 
+// TODO: implement right binary op for vector
 struct Matrix(int _Columns, int _Rows, T = float) {
 	alias Matrix!(_Columns, _Rows, T) thisType;
-	alias Matrix!(_Rows, _Columns, T) multipliableType;
+	alias Matrix!(_Rows, _Columns, T) transposeType;
 	enum Columns = _Columns;
 	enum Rows = _Rows;
 	alias BaseType = T;
@@ -72,9 +75,8 @@ struct Matrix(int _Columns, int _Rows, T = float) {
 
 	static if(Columns >= 3 && Rows == 4)
 	auto Translate(vec3 t) {
-		return multipliableType.Translation(t) * this;
+		return transposeType.Translation(t) * this;
 	}
-
 
 	// Requires at least 2x2
 	//	Rotations in lower dimensions don't make sense
@@ -91,7 +93,7 @@ struct Matrix(int _Columns, int _Rows, T = float) {
 		}
 		
 		auto RotateZ(float ang){
-			return multipliableType.ZRotation(ang) * this;
+			return transposeType.ZRotation(ang) * this;
 		}
 	}
 
@@ -109,7 +111,7 @@ struct Matrix(int _Columns, int _Rows, T = float) {
 		}
 
 		auto RotateY(float ang){
-			return multipliableType.YRotation(ang) * this;
+			return transposeType.YRotation(ang) * this;
 		}
 
 		static auto XRotation(float ang){
@@ -124,8 +126,19 @@ struct Matrix(int _Columns, int _Rows, T = float) {
 		}
 
 		auto RotateX(float ang){
-			return multipliableType.XRotation(ang) * this;
+			return transposeType.XRotation(ang) * this;
 		}
+	}
+
+	auto Transposed(){
+		transposeType ret = void;
+
+		foreach(uint x; 0..Columns)
+			foreach(uint y; 0..Rows){
+				ret[y,x] = get(x,y);
+			}
+
+		return ret;
 	}
 
 	ref T opIndex(size_t x, size_t y){

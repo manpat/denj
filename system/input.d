@@ -172,5 +172,8 @@ struct Input {
 	static void SetMouseCapture(bool capture = false){
 		mouseCapture = capture;
 		SDL_ShowCursor(!capture);
+		if(capture){
+			SDL_WarpMouseInWindow(Window.GetSDLWindow(), Window.GetWidth()/2, Window.GetHeight()/2);
+		}
 	}
 }

@@ -7,6 +7,8 @@ template isVec(T){
 	enum isVec = is(T == Vector!(D, sT), int D, sT);
 }
 
+
+// TODO: op assign methods
 struct Vector(int Dim, T = float){
 	alias Vector!(Dim, T) thisType;
 	enum Dimensions = Dim;

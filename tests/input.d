@@ -31,7 +31,7 @@ void InputTests(){
 		}else if(Input.GetKey(SDLK_s)){
 			glClearColor(1,0,1,1);
 
-		}else if(Input.GetKey(SDLK_c)){
+		}else if(Input.GetKeyDown(SDLK_c)){
 			capture ^= true;
 			Input.SetMouseCapture(capture);
 
