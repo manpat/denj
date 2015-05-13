@@ -29,17 +29,25 @@ private struct ForwardListIterator(NodeType){
 		}
 	}
 
-	auto Advance(){
+	auto ref Advance(){
 		if(!current) "Tried to advance a null forwardlist iterator".Except();
 		current = current.next;
+		return this;
+	}
+
+	auto ref Advance(size_t i){
+		while(i-- > 0){
+			Advance();
+		}
+
 		return this;
 	}
 }
 
 struct ForwardList(T){
-	alias ForwardListNode!T NodeType;
-	alias ForwardListIterator!NodeType IteratorType;
-	alias ForwardListIterator!(const(NodeType)) ConstIteratorType;
+	private alias ForwardListNode!T NodeType;
+	alias ForwardListIterator!NodeType Iterator;
+	alias ForwardListIterator!(const(NodeType)) ConstIterator;
 
 	private{
 		NodeType* first = null;
@@ -49,16 +57,16 @@ struct ForwardList(T){
 
 	@property {
 		auto begin(){
-			return IteratorType(first);
+			return Iterator(first);
 		}
 		auto end(){
-			return IteratorType(last);
+			return Iterator(last);
 		}
-		auto begin() const {
-			return ConstIteratorType(first);
+		auto cbegin() const {
+			return ConstIterator(first);
 		}
-		auto end() const {
-			return ConstIteratorType(last);
+		auto cend() const {
+			return ConstIterator(last);
 		}
 
 		auto length(){
@@ -66,7 +74,7 @@ struct ForwardList(T){
 		}
 	}
 
-	void Append()(auto ref T dat){
+	auto ref Append()(auto ref T dat){
 		auto node = new NodeType(null, dat);
 		if(!last){
 			first = last = node;
@@ -75,9 +83,11 @@ struct ForwardList(T){
 			last = node;
 		}
 		_length++;
+
+		return this;
 	}
 
-	void Prepend()(auto ref T dat){
+	auto ref Prepend()(auto ref T dat){
 		auto node = new NodeType(first, dat);
 		if(!first){
 			first = last = node;
@@ -86,6 +96,8 @@ struct ForwardList(T){
 			first = node;
 		}
 		_length++;
+
+		return this;
 	}
 
 	void toString(void delegate(const(char)[]) sink) const {
@@ -94,7 +106,7 @@ struct ForwardList(T){
 		sink("ForwardList!"~T.stringof);
 		sink("[");
 
-		auto it = begin;
+		auto it = cbegin;
 		while(it){
 			sink(it.value.to!string());
 			if(it.Advance()) sink(", ");
