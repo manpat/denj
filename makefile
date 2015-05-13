@@ -1,4 +1,4 @@
-SOURCE=$(wildcard *.d */*.d)
+SOURCE=$(wildcard *.d */*.d */*/*.d)
 
 build: $(SOURCE)
 	dmd $^ -ofbuild

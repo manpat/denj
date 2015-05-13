@@ -3,21 +3,24 @@ module main;
 import denj.utility;
 
 import tests.utility;
+import tests.containers;
 import tests.math;
 import tests.window;
 import tests.input;
 import tests.graphics;
 
 // version = TestLog;
+version = TestContainers;
  //version = TestMath;
 // version = TestWindow;
- version = TestInput;
+ //version = TestInput;
 //version = TestGraphics;
 // version = RunScratch;
 
 void main(){
 	version(TestLog) RunTest!LogTests();
 	version(TestMath) RunTest!MathTests();
+	version(TestContainers) RunTest!ContainerTests();
 	version(TestWindow) RunTest!WindowTests();
 	version(TestInput) RunTest!InputTests();
 	version(TestGraphics) RunTest!GraphicsTests();
