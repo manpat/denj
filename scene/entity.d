@@ -1,15 +1,21 @@
 module denj.scene.entity;
 
+import denj.scene.scene;
 import denj.scene.component;
 import denj.scene.transform;
 import denj.utility.sharedreference;
 
+// TODO: Think about component ordering by importance. i.e., Important/Depended
+//	upon things, get updated first
 struct Entity {
 	// Isn't really useful yet
 	size_t id;
 
 	// A shared reference to this entity
 	SharedReference!Entity reference;
+
+	// A reference to the owning scene
+	Scene owningScene;
 
 	// Should transform be shared? Other objects may hold 
 	//	references to, but it won't move if the entity does.
@@ -61,20 +67,31 @@ struct Entity {
 		children = [];
 	}
 
+	// Sets alive flag to false, and notifies children and components
+	//	about their impending doom
 	void Destroy(){
+		foreach(ref c; components){
+			c.Destroy();
+			c.destroy(); // This is D's class destroy
+		}
+
+		foreach(ref c; children){
+			if(c){
+				owningScene.DestroyEntity(c);
+			}
+		}
+
 		alive = false;
-		// Notify components
-		// Notify children
 	}
 
 	void Update(){
-		// Notify components
+		foreach(ref c; components){
+			c.Update();
+		}
 	}
 
-	void Render(){
-		// Notify components
-	}
-
+	// TODO: Detect if C has RenderableComponent interface and add to rendering
+	//	queue
 	C AddComponent(C, A...)(A a){
 		static assert(is(C : Component), "Entity cannot add a component of type "~C.stringof);
 
@@ -86,8 +103,8 @@ struct Entity {
 		return c;
 	}
 
-	// TODO: RemoveComponent(s)
-	// TODO: FindComponent
+	// TODO: RemoveComponent[s]
+	// TODO: (Find/Get)Component[s][InChildren]
 	// TODO: HasComponent
 
 	// TODO: AddChildren

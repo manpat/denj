@@ -5,32 +5,35 @@ import denj.scene;
 import std.string;
 
 void EntityTests(){
-	Log("New scene");
+	Log("=== New scene ===");
 	auto s = new Scene();
 
-	Log("New entity");
+	Log("\n=== New entity ===");
 	auto e1 = s.NewEntity();
-	Log(e1.id);
+	Log("Entity ID: ", e1.id);
 
-	Log("Adding component");
+	Log("\n=== Adding components ===");
 	e1.AddComponent!TestComponent(123f);
-	e1.AddComponent!TestComponent();
+	auto tc = e1.AddComponent!TestComponent();
 	e1.AddComponent!BlahComponent();
 
+	tc.data = 3.14159f;
 	Log(e1.components);
 
-	Log(__traits(allMembers, TestComponent));
-	Log(__traits(allMembers, BlahComponent));
+	Log("\n=== Updating scene ===");
+	s.UpdateEntities();
+	tc.active = false;
+	s.UpdateEntities();
 
-	Log("Destroy entity");
+	Log("\n=== Destroy entity ===");
 	s.DestroyEntity(e1);
 
-	Log("New Entity");
+	Log("\n=== New Entity ===");
 	auto e2 = s.NewEntity();
-	Log(e2 == e1);
-	Log(e1.value);
-	Log(e2.value);
-	Log(e2.components);
+	Log("E1 == E2?\t", e2 == e1);
+	Log("E1 =\t", e1.value);
+	Log("E2 =\t", *e2.value);
+	Log("E2.components: ", e2.components);
 }
 
 class TestComponent : Component{
@@ -40,6 +43,14 @@ class TestComponent : Component{
 		data = _data;
 	}
 
+	override void OnUpdate(){
+		Log("Test update ", data);
+	}
+
+	override void OnDestroy(){
+		Log("Test destroy ", data, "\tactive? ", active);
+	}
+
 	override string toString() const {
 		return "Test(%f)".format(data);
 	}
@@ -47,7 +58,11 @@ class TestComponent : Component{
 
 class BlahComponent : Component{
 	override void OnUpdate(){
+		Log("Blah update");
+	}
 
+	override void OnDestroy(){
+		Log("Blah destroy");
 	}
 
 	override string toString() const {

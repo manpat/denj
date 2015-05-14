@@ -24,6 +24,7 @@ class Scene {
 		}
 		e.Init();
 		e.id = ++lastEntityID;
+		e.owningScene = this;
 
 		e.reference = SharedReference!Entity(e);
 		return e.reference;
@@ -35,9 +36,18 @@ class Scene {
 		//	and updated before dead ones
 		if(e) {
 			e.Destroy();
-			// Shuffle to end
+			ShuffleEntities();
 		}
 		e.InvalidateReference();
+	}
+
+	// TODO: Make better
+	void UpdateEntities(){
+		foreach(ref e; entityPool){
+			if(e.isAlive && e.isActive){
+				e.Update();
+			}
+		}
 	}
 
 private:
@@ -47,5 +57,9 @@ private:
 		auto es = find!"!a.isAlive"(entityPool);
 		if(es.length > 0) return &es[0];
 		return null;
+	}
+
+	void ShuffleEntities(){
+		// ShuffleShuffleShuffle
 	}
 }

@@ -5,8 +5,27 @@ import denj.utility.sharedreference;
 
 class Component {
 	SharedReference!Entity owner;
+	bool active = true;
 
+	final void Update() {
+		if(active) OnUpdate();
+	}
+
+	// Should OnDestroy be called regardless of whether or not
+	//	the component is active?
+	final void Destroy() {
+		OnDestroy();
+	}
+
+	// Called once per frame, after input and before rendering
 	void OnUpdate() {};
-	void OnRender() {};
+
+	// Called when the component gets destroyed, just before the
+	//	owning entity becomes invalid.
 	void OnDestroy() {};
+}
+
+// TODO: This
+interface RenderableComponent {
+	void OnRender();
 }
