@@ -6,43 +6,46 @@ import denj.scene.entity;
 import std.algorithm;
 
 class Scene {
-	SharedReference!Entity[] entities;
+	Entity[] entityPool;
 	size_t lastEntityID = 0;
 
 	this(){
-		entities.length = 32;
-		foreach(ref e; entities){
-			e = SharedReference!Entity(new Entity());
-		}
+		entityPool.length = 32;
 	}
 
 	SharedReference!Entity NewEntity(){
-		auto e = _FindUnusedEntity();
+		auto e = FindUnusedEntity();
 		if(!e){
 			Log("No free entity");
-			entities.length = entities.capacity*2;
-			// TODO: Construct new Entities
+			entityPool.length = entityPool.capacity*2;
 
-			e = _FindUnusedEntity();
+			e = FindUnusedEntity();
 			if(!e) "Scene unable to create new entities".Except;
 		}
 		e.Init();
 		e.id = ++lastEntityID;
 
-		return e;
+		e.reference = SharedReference!Entity(e);
+		return e.reference;
 	}
 
 	void DestroyEntity(SharedReference!Entity e){
-		e.Destroy();
+		// If reference is valid, notify the entity and
+		//	shuffle it so that alive entities get queried
+		//	and updated before dead ones
+		if(e) {
+			e.Destroy();
+			// Shuffle to end
+		}
+		e.InvalidateReference();
 	}
 
 private:
-	SharedReference!Entity _FindUnusedEntity(){
+	Entity* FindUnusedEntity(){
 		Log("Finding unused entity...");
-		if(any!"!a"(entities)) "Null entity in scene list".Except; 
 
-		auto es = find!"!a.isAlive"(entities);
-		if(es.length > 0) return es[0];
-		return SharedReference!Entity();
+		auto es = find!"!a.isAlive"(entityPool);
+		if(es.length > 0) return &es[0];
+		return null;
 	}
 }

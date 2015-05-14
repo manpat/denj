@@ -1,6 +1,9 @@
 module denj.utility.sharedreference;
 
 struct SharedReference(T){
+	// Probably doesn't need to be a struct, but
+	//	I made it one just in case it ever needs extra
+	//	data. + memory representation is identical
 	private static struct SharedData {
 		T* object;
 	}
@@ -17,6 +20,14 @@ struct SharedReference(T){
 
 	alias value this;
 	@property T* value(){
-		return data.object;
+		return data?data.object:null;
+	}
+
+	void InvalidateReference(){
+		// Don't try to invalidate the reference if it 
+		//	hasn't been initialised	
+		if(data){
+			data.object = null;
+		}
 	}
 }

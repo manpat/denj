@@ -25,8 +25,11 @@ void EntityTests(){
 	Log("Destroy entity");
 	s.DestroyEntity(e1);
 
+	Log("New Entity");
 	auto e2 = s.NewEntity();
 	Log(e2 == e1);
+	Log(e1.value);
+	Log(e2.value);
 	Log(e2.components);
 }
 
