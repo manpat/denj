@@ -53,7 +53,7 @@ class Buffer {
 
 	this(BufferType _type = BufferType.Array, BufferUsage _usage = BufferUsage.StaticDraw){
 		cgl!glGenBuffers(1, &glbuffer);
-		if(!glbuffer) throw new Exception("Buffer creation failed");
+		if(!glbuffer) "Buffer creation failed".Except;
 
 		type = _type;
 		usage = _usage;

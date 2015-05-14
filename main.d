@@ -8,23 +8,17 @@ import tests.math;
 import tests.window;
 import tests.input;
 import tests.graphics;
-
-// version = TestLog;
-version = TestContainers;
- //version = TestMath;
-// version = TestWindow;
- //version = TestInput;
-//version = TestGraphics;
-// version = RunScratch;
+import tests.entities;
 
 void main(){
-	version(TestLog) RunTest!LogTests();
-	version(TestMath) RunTest!MathTests();
-	version(TestContainers) RunTest!ContainerTests();
-	version(TestWindow) RunTest!WindowTests();
-	version(TestInput) RunTest!InputTests();
-	version(TestGraphics) RunTest!GraphicsTests();
-	version(RunScratch) RunTest!Scratch();
+	//RunTest!LogTests();
+	//RunTest!MathTests();
+	//RunTest!ContainerTests();
+	//RunTest!WindowTests();
+	//RunTest!InputTests();
+	//RunTest!GraphicsTests();
+	RunTest!EntityTests();
+	//RunTest!Scratch();
 
 	Log("Finished");
 }
