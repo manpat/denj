@@ -22,7 +22,7 @@ struct Entity {
 	//	references to, but it won't move if the entity does.
 	// If Transforms are ever pooled, this will need to be made
 	//	a shared reference.
-	Transform* transform = new Transform;
+	Transform* transform;
 
 	// Not shared references because these are never moved (by me)
 	Component[] components;
@@ -63,7 +63,7 @@ struct Entity {
 	void Init(){
 		alive = true;
 		active = true;
-		*transform = Transform.init;
+		transform = new Transform; // TODO: Not this
 		components = [];
 		children = [];
 	}

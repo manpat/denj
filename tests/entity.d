@@ -2,6 +2,7 @@ module tests.entities;
 
 import denj.utility;
 import denj.scene;
+import denj.math;
 import std.string;
 
 void EntityTests(){
@@ -30,7 +31,7 @@ void EntityTests(){
 	s.UpdateEntities();
 
 	auto e3 = s.NewEntity();
-	s.NewEntity();
+	auto e4 = s.NewEntity();
 	s.NewEntity();
 	s.NewEntity();
 
