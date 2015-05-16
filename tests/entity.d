@@ -31,7 +31,8 @@ void EntityTests(){
 	s.UpdateEntities();
 
 	auto e3 = s.NewEntity();
-	auto e4 = s.NewEntity();
+	s.NewEntity();
+	s.NewEntity();
 	s.NewEntity();
 	s.NewEntity();
 

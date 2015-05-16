@@ -39,7 +39,7 @@ class Scene {
 
 			// This will be slow if you're trying to delete a bunch of things
 			//	so maybe find a way to move this somewhere else
-			ShuffleEntities(); 
+			BubbleEntity(e.value); 
 		}
 		e.InvalidateReference();
 	}
@@ -62,30 +62,24 @@ private:
 		return null;
 	}
 
-	void ShuffleEntities(){
+	void BubbleEntity(Entity* deadIt){
 		import std.algorithm : swap;
 
-		Log("ShuffleEntities");
-		auto aliveIt = &entityPool[0];
-		auto deadIt = &entityPool[$-1];
+		auto aliveIt = &entityPool[$-1];
 
-		while(aliveIt < deadIt){
-			if(!aliveIt.isAlive && deadIt.isAlive){
-				// Log("Swap dead ", aliveIt.id, " with alive ", deadIt.id);
-				swap(*aliveIt, *deadIt);
-				aliveIt.reference.SetReference(aliveIt);
-				// Dead reference doesn't need to be set as it's set
-				//	upon entity creation
-			}
+		// Search for an alive entity at the end of the pool
+		while(aliveIt != deadIt && !aliveIt.isAlive){
+			aliveIt--;
+		}
 
-			// Not sure if both of these are neccessary
-			while(deadIt != aliveIt && aliveIt.isAlive){
-				aliveIt++;
-			}
-
-			while(deadIt != aliveIt && !deadIt.isAlive){
-				deadIt--;
-			}
+		// If one was found, swap
+		if(aliveIt != deadIt){
+			// Log("Swap dead ", deadIt.id, " with alive ", aliveIt.id);
+			
+			swap(*deadIt, *aliveIt);
+			aliveIt.reference.SetReference(aliveIt);
+			// Dead reference doesn't need to be set as it's set
+			//	upon entity creation
 		}
 	}
 }
