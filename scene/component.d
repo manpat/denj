@@ -25,7 +25,7 @@ class Component {
 	void OnDestroy() {};
 }
 
-// TODO: This
+// TODO: Maybe move this to somewhere that does rendering
 interface RenderableComponent {
 	void OnRender();
 }

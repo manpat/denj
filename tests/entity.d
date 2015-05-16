@@ -20,13 +20,26 @@ void EntityTests(){
 	tc.data = 3.14159f;
 	Log(e1.components);
 
+	Log("\n=== Adding children ===");
+	auto echild = s.NewEntity();
+	e1.AddChild(echild);
+
 	Log("\n=== Updating scene ===");
 	s.UpdateEntities();
 	tc.active = false;
 	s.UpdateEntities();
 
+	auto e3 = s.NewEntity();
+	s.NewEntity();
+	s.NewEntity();
+	s.NewEntity();
+
+	LogF("Entity pool:\n%(\t%s, \n%)", s.entityPool);
 	Log("\n=== Destroy entity ===");
 	s.DestroyEntity(e1);
+	LogF("Entity pool:\n%(\t%s, \n%)", s.entityPool);
+	
+	Log("Shuffled entity id: ", e3.id); // Just to make sure that the reference is still valid
 
 	Log("\n=== New Entity ===");
 	auto e2 = s.NewEntity();
@@ -56,9 +69,13 @@ class TestComponent : Component{
 	}
 }
 
-class BlahComponent : Component{
+class BlahComponent : Component, RenderableComponent{
 	override void OnUpdate(){
 		Log("Blah update");
+	}
+
+	override void OnRender(){
+		Log("Blah render");
 	}
 
 	override void OnDestroy(){

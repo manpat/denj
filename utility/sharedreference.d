@@ -23,6 +23,15 @@ struct SharedReference(T){
 		return data?data.object:null;
 	}
 
+	// To be called if object is moved
+	void SetReference(T* o){
+		if(data){
+			data.object = o;
+		}else{
+			data = new SharedData(o);
+		}
+	}
+
 	void InvalidateReference(){
 		// Don't try to invalidate the reference if it 
 		//	hasn't been initialised	

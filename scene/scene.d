@@ -10,7 +10,7 @@ class Scene {
 	size_t lastEntityID = 0;
 
 	this(){
-		entityPool.length = 32;
+		entityPool.length = 8;
 	}
 
 	SharedReference!Entity NewEntity(){
@@ -36,7 +36,10 @@ class Scene {
 		//	and updated before dead ones
 		if(e) {
 			e.Destroy();
-			ShuffleEntities();
+
+			// This will be slow if you're trying to delete a bunch of things
+			//	so maybe find a way to move this somewhere else
+			ShuffleEntities(); 
 		}
 		e.InvalidateReference();
 	}
@@ -60,6 +63,29 @@ private:
 	}
 
 	void ShuffleEntities(){
-		// ShuffleShuffleShuffle
+		import std.algorithm : swap;
+
+		Log("ShuffleEntities");
+		auto aliveIt = &entityPool[0];
+		auto deadIt = &entityPool[$-1];
+
+		while(aliveIt < deadIt){
+			if(!aliveIt.isAlive && deadIt.isAlive){
+				// Log("Swap dead ", aliveIt.id, " with alive ", deadIt.id);
+				swap(*aliveIt, *deadIt);
+				aliveIt.reference.SetReference(aliveIt);
+				// Dead reference doesn't need to be set as it's set
+				//	upon entity creation
+			}
+
+			// Not sure if both of these are neccessary
+			while(deadIt != aliveIt && aliveIt.isAlive){
+				aliveIt++;
+			}
+
+			while(deadIt != aliveIt && !deadIt.isAlive){
+				deadIt--;
+			}
+		}
 	}
 }

@@ -1,5 +1,6 @@
 module denj.scene.entity;
 
+import denj.utility.log; // 
 import denj.scene.scene;
 import denj.scene.component;
 import denj.scene.transform;
@@ -21,7 +22,7 @@ struct Entity {
 	//	references to, but it won't move if the entity does.
 	// If Transforms are ever pooled, this will need to be made
 	//	a shared reference.
-	Transform transform = new Transform();
+	Transform* transform = new Transform;
 
 	// Not shared references because these are never moved (by me)
 	Component[] components;
@@ -62,7 +63,7 @@ struct Entity {
 	void Init(){
 		alive = true;
 		active = true;
-		transform = Transform.init;
+		*transform = Transform.init;
 		components = [];
 		children = [];
 	}
@@ -73,6 +74,7 @@ struct Entity {
 		foreach(ref c; components){
 			c.Destroy();
 			c.destroy(); // This is D's class destroy
+			c = null;
 		}
 
 		foreach(ref c; children){
@@ -95,6 +97,10 @@ struct Entity {
 	C AddComponent(C, A...)(A a){
 		static assert(is(C : Component), "Entity cannot add a component of type "~C.stringof);
 
+		static if (is(C : RenderableComponent)){
+			Log("Component ", C.stringof, " is renderable");
+		}
+
 		// TODO: Maybe add a component pool?
 		// TODO: Lookup how to do pools with classes
 		auto c = new C(a);
@@ -107,7 +113,15 @@ struct Entity {
 	// TODO: (Find/Get)Component[s][InChildren]
 	// TODO: HasComponent
 
-	// TODO: AddChildren
+	void SetParent(SharedReference!Entity p){
+		p.AddChild(reference);
+	}
+
+	void AddChild(SharedReference!Entity c){
+		children ~= c;
+		c.parent = reference;
+		c.transform.parent = transform;
+	}
 	// TODO: FindChildren
 	// TODO: RemoveChildren
 }
