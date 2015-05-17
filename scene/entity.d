@@ -1,6 +1,6 @@
 module denj.scene.entity;
 
-import denj.utility.log; // 
+import denj.utility.log;
 import denj.scene.scene;
 import denj.scene.component;
 import denj.scene.transform;

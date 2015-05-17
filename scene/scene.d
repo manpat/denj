@@ -19,6 +19,16 @@ class Scene {
 			Log("No free entity");
 			entityPool.length = entityPool.capacity*2;
 
+			// TODO: Fuck this off
+			size_t end = entityPool.length/2;
+			while(!entityPool[end].isAlive){
+				end--;
+			}
+
+			foreach(ref ent; entityPool[0..end]){
+				ent.reference.SetReference(&ent);
+			}
+
 			e = FindUnusedEntity();
 			if(!e) "Scene unable to create new entities".Except;
 		}
@@ -36,9 +46,6 @@ class Scene {
 		//	and updated before dead ones
 		if(e) {
 			e.Destroy();
-
-			// This will be slow if you're trying to delete a bunch of things
-			//	so maybe find a way to move this somewhere else
 			BubbleEntity(e.value); 
 		}
 		e.InvalidateReference();
@@ -58,7 +65,10 @@ private:
 		Log("Finding unused entity...");
 
 		auto es = find!"!a.isAlive"(entityPool);
-		if(es.length > 0) return &es[0];
+		if(es.length > 0) {
+			Log("Found ", &es[0]);
+			return &es[0];
+		}
 		return null;
 	}
 
@@ -74,10 +84,16 @@ private:
 
 		// If one was found, swap
 		if(aliveIt != deadIt){
-			// Log("Swap dead ", deadIt.id, " with alive ", aliveIt.id);
+			Log("Swap dead ", deadIt, " with alive ", aliveIt);
+			Log("Swap dead ", deadIt.id, " with alive ", aliveIt.id);
 			
+			Log("Alive: ", aliveIt.reference.value());
+			Log("Dead: ", 	deadIt.reference.value());
+
+			aliveIt.reference.SetReference(deadIt);
 			swap(*deadIt, *aliveIt);
-			aliveIt.reference.SetReference(aliveIt);
+			// deadIt.reference.SetReference(deadIt);
+
 			// Dead reference doesn't need to be set as it's set
 			//	upon entity creation
 		}

@@ -35,13 +35,28 @@ void EntityTests(){
 	s.NewEntity();
 	s.NewEntity();
 	s.NewEntity();
+	s.NewEntity();
+	s.NewEntity();
+	s.NewEntity();
+	s.NewEntity();
+	s.NewEntity();
+	s.NewEntity();
+	auto e4 = s.NewEntity();
 
-	LogF("Entity pool:\n%(\t%s, \n%)", s.entityPool);
+	void LogEPool(){
+		Log("Entity Pool:");
+		foreach(ref e; s.entityPool){
+			LogF("\t%2s (%s||%s) alive: %s", e.id, &e, e.reference.value, e.isAlive);
+		}
+	}
+
+	LogEPool();
 	Log("\n=== Destroy entity ===");
 	s.DestroyEntity(e1);
-	LogF("Entity pool:\n%(\t%s, \n%)", s.entityPool);
+	LogEPool();
 	
-	Log("Shuffled entity id: ", e3.id); // Just to make sure that the reference is still valid
+	Log("Unshuffled entity: (", e3.value, ")"); // Just to make sure that the reference is still valid
+	Log("Shuffled entity:   (", e4.value, ")"); // Just to make sure that the reference is still valid
 
 	Log("\n=== New Entity ===");
 	auto e2 = s.NewEntity();
