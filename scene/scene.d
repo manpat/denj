@@ -5,6 +5,7 @@ import denj.utility.sharedreference;
 import denj.scene.entity;
 import std.algorithm;
 
+// TODO: Probably allow synchronisation
 class Scene {
 	Entity[] entityPool;
 	size_t lastEntityID = 0;
@@ -20,13 +21,8 @@ class Scene {
 			Log("No free entity");
 			entityPool.length = entityPool.capacity*2;
 
-			// TODO: Fuck this off
-			size_t end = entityPool.length/2;
-			while(!entityPool[end].isAlive){
-				end--;
-			}
-
-			foreach(ref ent; entityPool[0..end+1]){
+			// So that entities don't point to old versions of themselves
+			foreach(ref ent; entityPool[0..numAliveEntities]){
 				ent.reference.SetReference(&ent);
 			}
 
@@ -66,7 +62,7 @@ private:
 	Entity* FindUnusedEntity(){
 		Log("Finding unused entity...");
 
-		auto es = find!"!a.isAlive"(entityPool);
+		auto es = find!"!a.isAlive"(entityPool[numAliveEntities..$]);
 		if(es.length > 0) {
 			Log("Found ", &es[0]);
 			return &es[0];

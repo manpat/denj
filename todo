@@ -14,12 +14,7 @@ Filesystem
 
 	JSON/XML/INI loading/writing - implicitly available with parsing classes 
 
-Scenegraph
-
-GameObjects/Entities
-	Connected and updated through scenegraph
-
-	Components
-
 Renderable components/interface
 	Instances go into render queues, referenced in renderer components
+
+Ensure that entities can ONLY be destroyed through the scene using DestroyEntity

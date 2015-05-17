@@ -31,7 +31,7 @@ void EntityTests(){
 	s.UpdateEntities();
 
 	auto e3 = s.NewEntity();
-	foreach(i; 0..20) s.NewEntity();
+	foreach(i; 0..24) s.NewEntity();
 	auto e4 = s.NewEntity();
 
 	void LogEPool(){
