@@ -8,6 +8,7 @@ import std.algorithm;
 class Scene {
 	Entity[] entityPool;
 	size_t lastEntityID = 0;
+	size_t numAliveEntities = 0;
 
 	this(){
 		entityPool.length = 8;
@@ -36,6 +37,8 @@ class Scene {
 		e.id = ++lastEntityID;
 		e.owningScene = this;
 
+		numAliveEntities++;
+
 		e.reference = SharedReference!Entity(e);
 		return e.reference;
 	}
@@ -49,14 +52,13 @@ class Scene {
 			BubbleEntity(e.value); 
 		}
 		e.InvalidateReference();
+
+		numAliveEntities--;
 	}
 
-	// TODO: Make better
 	void UpdateEntities(){
-		foreach(ref e; entityPool){
-			if(e.isAlive && e.isActive){
-				e.Update();
-			}
+		foreach(ref e; entityPool[0..numAliveEntities]){
+			e.Update();
 		}
 	}
 
@@ -72,6 +74,9 @@ private:
 		return null;
 	}
 
+	// Swaps a dead entity with an alive entity at the end of the pool
+	//	Calling this with each entity that dies will ensure that entities
+	//	toward the beginning of the pool are always alive
 	void BubbleEntity(Entity* deadIt){
 		import std.algorithm : swap;
 
