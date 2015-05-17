@@ -25,7 +25,7 @@ class Scene {
 				end--;
 			}
 
-			foreach(ref ent; entityPool[0..end]){
+			foreach(ref ent; entityPool[0..end+1]){
 				ent.reference.SetReference(&ent);
 			}
 
@@ -84,16 +84,14 @@ private:
 
 		// If one was found, swap
 		if(aliveIt != deadIt){
-			Log("Swap dead ", deadIt, " with alive ", aliveIt);
-			Log("Swap dead ", deadIt.id, " with alive ", aliveIt.id);
+			// Log("Swap dead ", deadIt, " with alive ", aliveIt);
+			// Log("Swap dead ", deadIt.id, " with alive ", aliveIt.id);
 			
-			Log("Alive: ", aliveIt.reference.value());
-			Log("Dead: ", 	deadIt.reference.value());
+			// Log("Alive: ", aliveIt.reference.value());
+			// Log("Dead: ", 	deadIt.reference.value());
 
 			aliveIt.reference.SetReference(deadIt);
 			swap(*deadIt, *aliveIt);
-			// deadIt.reference.SetReference(deadIt);
-
 			// Dead reference doesn't need to be set as it's set
 			//	upon entity creation
 		}

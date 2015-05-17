@@ -64,6 +64,7 @@ void EntityTests(){
 	Log("E1 =\t", e1.value);
 	Log("E2 =\t", *e2.value);
 	Log("E2.components: ", e2.components);
+	LogEPool();
 }
 
 class TestComponent : Component{
