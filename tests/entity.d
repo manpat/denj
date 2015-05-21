@@ -17,8 +17,15 @@ void EntityTests(){
 	e1.AddComponent!TestComponent(123f);
 	auto tc = e1.AddComponent!TestComponent();
 	e1.AddComponent!BlahComponent();
+	e1.AddComponent!DummyComponent();
+	e1.AddComponent!DummyComponent();
 
 	tc.data = 3.14159f;
+	Log(e1.components);
+
+	Log("\n=== RemoveComponent components ===");
+	e1.RemoveComponent(tc);
+	e1.RemoveComponents!DummyComponent();
 	Log(e1.components);
 
 	Log("\n=== Adding children ===");
@@ -56,6 +63,12 @@ void EntityTests(){
 	Log("E2 =\t", *e2.value);
 	Log("E2.components: ", e2.components);
 	LogEPool();
+}
+
+class DummyComponent : Component{
+	override string toString() const {
+		return "Dummy()";
+	}	
 }
 
 class TestComponent : Component{

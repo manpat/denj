@@ -6,10 +6,12 @@ import denj.scene.component;
 import denj.scene.transform;
 import denj.utility.sharedreference;
 
+import std.traits;
+import std.algorithm;
+
 // TODO: Think about component ordering by importance. i.e., Important/Depended
 //	upon things, get updated first
 struct Entity {
-	// Isn't really useful yet
 	size_t id;
 
 	// A shared reference to this entity
@@ -73,6 +75,11 @@ struct Entity {
 	void Destroy(){
 		foreach(ref c; components){
 			c.Destroy();
+		}
+
+		// Separate just incase components reference other components
+		//	on destroy
+		foreach(ref c; components){
 			c.destroy(); // This is D's class destroy
 			c = null;
 		}
@@ -92,8 +99,7 @@ struct Entity {
 		}
 	}
 
-	// TODO: Detect if C has RenderableComponent interface and add to rendering
-	//	queue
+	// TODO: If C has RenderableComponent interface add to rendering queue
 	C AddComponent(C, A...)(A a){
 		static assert(is(C : Component), "Entity cannot add a component of type "~C.stringof);
 
@@ -105,11 +111,32 @@ struct Entity {
 		// TODO: Lookup how to do pools with classes
 		auto c = new C(a);
 		c.owner = reference;
+		c.typeString = C.stringof;
 		components ~= c;
 		return c;
 	}
 
-	// TODO: RemoveComponent[s]
+	void RemoveComponent(Component c){
+		if(!c) return;
+		if(!components.canFind(c)) return;
+
+		c.Destroy();
+		components = components.remove!(x => x == c);
+	}
+
+	void RemoveComponents(alias pred)(){ 
+		auto cs = components.find!pred;
+		foreach(ref c; cs){
+			c.Destroy();
+		}
+
+		components = components.remove!pred;
+	}
+
+	void RemoveComponents(C)() if(is(C : Component)){
+		RemoveComponents!((Component c) => c.typeString == C.stringof);
+	}
+
 	// TODO: (Find/Get)Component[s][InChildren]
 	// TODO: HasComponent
 
@@ -123,5 +150,5 @@ struct Entity {
 		c.transform.parent = transform;
 	}
 	// TODO: FindChildren
-	// TODO: RemoveChildren
+	// TODO: RemoveChild[ren]
 }

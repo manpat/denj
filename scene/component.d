@@ -5,6 +5,7 @@ import denj.utility.sharedreference;
 
 class Component {
 	SharedReference!Entity owner;
+	string typeString = "Component";
 	bool active = true;
 
 	final void Update() {

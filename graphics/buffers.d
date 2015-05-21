@@ -5,53 +5,53 @@ import denj.graphics.common;
 import denj.utility;
 import denj.math;
 
-private __gshared {
-	Buffer[BufferType] boundBuffers;
-}
-
-// TODO: move all this shit back into Buffer
-enum BufferType {
-	Array = GL_ARRAY_BUFFER,
-	Index = GL_ELEMENT_ARRAY_BUFFER,
-	Uniform = GL_UNIFORM_BUFFER,
-	ShaderStorage = GL_SHADER_STORAGE_BUFFER,
-} 
-enum BufferUsage {
-	StaticDraw = GL_STATIC_DRAW,
-	StaticRead = GL_STATIC_READ,
-	StaticCopy = GL_STATIC_COPY,
-	StreamDraw = GL_STREAM_DRAW,
-	StreamRead = GL_STREAM_READ,
-	StreamCopy = GL_STREAM_COPY,
-	DynamicDraw = GL_DYNAMIC_DRAW,
-	DynamicRead = GL_DYNAMIC_READ,
-	DynamicCopy = GL_DYNAMIC_COPY,
+private {
+	Buffer[Buffer.Type] boundBuffers;
 }
 
 template isBuffer(T){
 	enum isBuffer = is(T == Buffer);
 }
 
-bool IsBufferBound(BufferType t){
+bool IsBufferBound(Buffer.Type t){
 	return boundBuffers.get(t, null) !is null;
 }
 
-Buffer GetBoundBuffer(BufferType t){
+Buffer GetBoundBuffer(Buffer.Type t){
 	return boundBuffers.get(t, null);
 }
 
 class Buffer {
+	enum Type {
+		Array = GL_ARRAY_BUFFER,
+		Index = GL_ELEMENT_ARRAY_BUFFER,
+		Uniform = GL_UNIFORM_BUFFER,
+		ShaderStorage = GL_SHADER_STORAGE_BUFFER,
+	} 
+
+	enum Usage {
+		StaticDraw = GL_STATIC_DRAW,
+		StaticRead = GL_STATIC_READ,
+		StaticCopy = GL_STATIC_COPY,
+		StreamDraw = GL_STREAM_DRAW,
+		StreamRead = GL_STREAM_READ,
+		StreamCopy = GL_STREAM_COPY,
+		DynamicDraw = GL_DYNAMIC_DRAW,
+		DynamicRead = GL_DYNAMIC_READ,
+		DynamicCopy = GL_DYNAMIC_COPY,
+	}
+
 	public { // TODO: Make private
 		GLuint glbuffer;
-		BufferType type;
-		BufferUsage usage;
+		Type type;
+		Usage usage;
 		size_t count;
 		GLuint basegltype;
 		uint typeelements;
 		size_t elementsize;
 	}
 
-	this(BufferType _type = BufferType.Array, BufferUsage _usage = BufferUsage.StaticDraw){
+	this(Type _type = Type.Array, Usage _usage = Usage.StaticDraw){
 		cgl!glGenBuffers(1, &glbuffer);
 		if(!glbuffer) "Buffer creation failed".Except;
 

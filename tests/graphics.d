@@ -39,7 +39,7 @@ void GraphicsTests(){
 
 	auto vbo = new Buffer();
 	auto cbo = new Buffer();
-	auto ibo = new Buffer(BufferType.Index);
+	auto ibo = new Buffer(Buffer.Type.Index);
 	vbo.Upload(data);
 	ibo.Upload(indicies);
 

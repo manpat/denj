@@ -17,8 +17,11 @@ Math
 	Vector
 	Matrix
 	Quaternion
+	AABB
 	Frustum
+	Ray
 	Interpolation
+	Intersections
 
 Graphics
 	Renderer
