@@ -99,6 +99,10 @@ struct Entity {
 		}
 	}
 
+	static bool ComponentTypeCompare(C)(Component c){
+		return c.typeString == fullyQualifiedName!C;
+	}
+
 	// TODO: If C has RenderableComponent interface add to rendering queue
 	C AddComponent(C, A...)(A a){
 		static assert(is(C : Component), "Entity cannot add a component of type "~C.stringof);
@@ -111,7 +115,7 @@ struct Entity {
 		// TODO: Lookup how to do pools with classes
 		auto c = new C(a);
 		c.owner = reference;
-		c.typeString = C.stringof;
+		c.typeString = fullyQualifiedName!C;
 		components ~= c;
 		return c;
 	}
@@ -134,11 +138,22 @@ struct Entity {
 	}
 
 	void RemoveComponents(C)() if(is(C : Component)){
-		RemoveComponents!((Component c) => c.typeString == C.stringof);
+		RemoveComponents!(ComponentTypeCompare!C);
 	}
 
+	bool HasComponent(C)(){
+		static assert(is(C : Component), "Parameter to Entity.HasComponent must be a Component");
+
+		return components.canFind!(ComponentTypeCompare!C);
+	}
+
+	C FindComponent(C)(){		
+		auto cs = components.find!(ComponentTypeCompare!C);
+		if(cs.length > 0) return cast(C) cs[0];
+
+		return null;
+	}
 	// TODO: (Find/Get)Component[s][InChildren]
-	// TODO: HasComponent
 
 	void SetParent(SharedReference!Entity p){
 		p.AddChild(reference);

@@ -23,10 +23,15 @@ void EntityTests(){
 	tc.data = 3.14159f;
 	Log(e1.components);
 
+	Log("TestComponent: ", e1.FindComponent!TestComponent());
+
 	Log("\n=== RemoveComponent components ===");
 	e1.RemoveComponent(tc);
 	e1.RemoveComponents!DummyComponent();
 	Log(e1.components);
+
+	Log("Entity has TestComponent: ", e1.HasComponent!TestComponent);
+	Log("Entity has DummyComponent: ", e1.HasComponent!DummyComponent);
 
 	Log("\n=== Adding children ===");
 	auto echild = s.NewEntity();
@@ -67,7 +72,7 @@ void EntityTests(){
 
 class DummyComponent : Component{
 	override string toString() const {
-		return "Dummy()";
+		return typeString;
 	}	
 }
 
