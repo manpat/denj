@@ -19,6 +19,7 @@ void EntityTests(){
 	e1.AddComponent!BlahComponent();
 	e1.AddComponent!DummyComponent();
 	e1.AddComponent!DummyComponent();
+	e1.AddComponent!BlahComponent();
 
 	tc.data = 3.14159f;
 	Log(e1.components);
@@ -72,7 +73,7 @@ void EntityTests(){
 
 class DummyComponent : Component{
 	override string toString() const {
-		return typeString;
+		return "DummyComponent";
 	}	
 }
 

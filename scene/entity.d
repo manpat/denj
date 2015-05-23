@@ -99,8 +99,9 @@ struct Entity {
 		}
 	}
 
+	// Casting is faster than comparing type strings
 	static bool ComponentTypeCompare(C)(Component c){
-		return c.typeString == fullyQualifiedName!C;
+		return cast(C) c !is null;
 	}
 
 	// TODO: If C has RenderableComponent interface add to rendering queue
@@ -115,7 +116,6 @@ struct Entity {
 		// TODO: Lookup how to do pools with classes
 		auto c = new C(a);
 		c.owner = reference;
-		c.typeString = fullyQualifiedName!C;
 		components ~= c;
 		return c;
 	}
@@ -129,7 +129,7 @@ struct Entity {
 	}
 
 	void RemoveComponents(alias pred)(){ 
-		auto cs = components.find!pred;
+		auto cs = components.filter!pred;
 		foreach(ref c; cs){
 			c.Destroy();
 		}

@@ -36,5 +36,4 @@ void RunTest(alias test)(){
 }
 
 void Scratch(){
-	
 }
