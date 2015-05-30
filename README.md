@@ -7,7 +7,7 @@ Feedback and suggestions welcome.
 Dependencies
 ------------
 
-[DerelictUtil](https://github.com/DerelictOrg/DerelictUtil)
+[DerelictUtil](https://github.com/DerelictOrg/DerelictUtil) (Must be 1.9.x, lives in the '2.0' branch)
 
 [DerelictSDL2](https://github.com/DerelictOrg/DerelictSDL2)
 
