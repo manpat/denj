@@ -20,6 +20,10 @@ struct Vector(int Dim, T = float){
 		@property ref T get(int i)(){
 			return data[i];
 		}
+
+		@property T* ptr(){
+			return data.ptr;
+		}
 	}
 
 	alias get!0 x;

@@ -14,6 +14,8 @@ import std.algorithm;
 struct Entity {
 	size_t id;
 
+	char[] name;
+
 	// A shared reference to this entity
 	SharedReference!Entity reference;
 

@@ -103,6 +103,9 @@ class Buffer {
 			basegltype = GetGLType!T;
 			typeelements = 1;
 
+		}else static if(is(T == struct)){
+			basegltype = 0;
+			typeelements = 1;
 		}else{
 			static assert(0, "Can't do it");
 		}
@@ -137,6 +140,10 @@ class Buffer {
 			basegltype = GetGLType!T;
 			typeelements = 1;
 
+		}else static if(is(T == struct)){
+			basegltype = 0;
+			typeelements = 1;
+			
 		}else{
 			static assert(0, "Can't do it");
 		}

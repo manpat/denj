@@ -21,7 +21,7 @@ private {
 struct GLContextSettings{
 	uint major;
 	uint minor;
-	// compatibility
+	// TODO: compatibility
 	bool debugContext = false;
 	bool doubleBuffer = true;
 }
@@ -34,7 +34,7 @@ struct Renderer {
 		uint glstate;
 
 		ShaderProgram boundShader;
-		// Bound buffers
+		// Attribute -> Buffer map
 	}
 
 	static void Init(GLContextSettings glsettings = DefaultContextSettings){
@@ -102,6 +102,8 @@ struct Renderer {
 
 	// Calls glDraw(Arrays|Elements)[Instanced] based on bound buffers
 	static void Draw(uint drawMode, uint start = 0, int count = -1){
+		// TODO: Check bound attributes instead of bound buffers
+		//		Attributes can be set to constants
 		if(!IsBufferBound(Buffer.Type.Array)){
 			"Tried to draw with no attribute array bound".Except;
 		}

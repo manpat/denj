@@ -43,6 +43,9 @@ struct Matrix(int _Columns, int _Rows, T = float) {
 		T get(int x, int y) const {
 			return data[x + y * Columns];
 		}
+		@property T* ptr(){
+			return data.ptr;
+		}
 	}
 
 	this(T[Columns * Rows] _data){
